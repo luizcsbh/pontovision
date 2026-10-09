@@ -4,6 +4,27 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
 
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import * as fs from 'fs';
+
+const envCandidates = [
+  path.resolve(process.cwd(), 'atlas-credentials.env'),
+  path.resolve(process.cwd(), '../atlas-credentials.env'),
+  path.resolve(process.cwd(), '../../atlas-credentials.env'),
+  path.resolve(__dirname, '../../../atlas-credentials.env'),
+  path.resolve(__dirname, '../../../../atlas-credentials.env'),
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(process.cwd(), '../.env'),
+  path.resolve(process.cwd(), '../../.env'),
+];
+
+for (const envFile of envCandidates) {
+  if (fs.existsSync(envFile)) {
+    dotenv.config({ path: envFile });
+  }
+}
+
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);

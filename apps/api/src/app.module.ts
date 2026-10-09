@@ -15,11 +15,27 @@ import { ReportsModule } from './modules/reports/reports.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { StorageModule } from './modules/storage/storage.module';
 
+import * as path from 'path';
+import * as fs from 'fs';
+
+const envFileCandidates = [
+  path.resolve(process.cwd(), 'atlas-credentials.env'),
+  path.resolve(process.cwd(), '../atlas-credentials.env'),
+  path.resolve(process.cwd(), '../../atlas-credentials.env'),
+  path.resolve(__dirname, '../../../atlas-credentials.env'),
+  path.resolve(__dirname, '../../../../atlas-credentials.env'),
+  path.resolve(process.cwd(), '.env'),
+  path.resolve(process.cwd(), '../.env'),
+  path.resolve(process.cwd(), '../../.env'),
+  path.resolve(__dirname, '../../../.env'),
+  path.resolve(__dirname, '../../../../.env'),
+].filter((f) => fs.existsSync(f));
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env', 'atlas-credentials.env'],
+      envFilePath: envFileCandidates.length > 0 ? envFileCandidates : ['.env'],
     }),
     ThrottlerModule.forRoot([
       {
