@@ -20,6 +20,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { ComprovanteREP, ComprovanteREPData } from './ComprovanteREP';
+import { AuthenticatedImage } from '../common/AuthenticatedImage';
 
 interface OcrReviewModalProps {
   documentId: string;
@@ -242,11 +243,11 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
                 </div>
 
                 <div className="flex-1 flex items-center justify-center min-h-[260px] bg-black/40 rounded-xl p-2">
-                  <img
+                  <AuthenticatedImage
                     src={`/api/v1/documents/${documentId}/file`}
                     alt="Comprovante"
                     className="max-h-[46vh] object-contain rounded-lg shadow-md"
-                    loading="lazy"
+                    fallbackText="Não foi possível recuperar a imagem do comprovante"
                   />
                 </div>
 
@@ -535,11 +536,11 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
               {/* Imagem Original para Conferência */}
               <div className="flex flex-col items-center gap-2 max-w-[280px]">
                 <span className="text-xs text-slate-500 font-medium">Foto Original do Cupom</span>
-                <img
+                <AuthenticatedImage
                   src={`/api/v1/documents/${documentId}/file`}
                   alt="Comprovante original"
                   className="rounded-2xl shadow-lg border border-slate-200 max-h-[50vh] object-contain"
-                  loading="lazy"
+                  fallbackText="Foto do comprovante não disponível"
                 />
 
                 {/* Rodapé de Tamanho na visualização do Comprovante */}

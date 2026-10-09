@@ -3,6 +3,7 @@ import { apiRequest } from '../api/client';
 import { minutesToTimeString, TimeEntryType, TimeEntrySource } from '@pontovision/shared';
 import { useAuth } from '../context/AuthContext';
 import { ComprovanteREP, ComprovanteREPData } from '../components/ocr/ComprovanteREP';
+import { AuthenticatedImage } from '../components/common/AuthenticatedImage';
 import {
   ChevronLeft, ChevronRight, AlertTriangle, Clock, Plus, Trash2,
   FileText, Edit3, CheckCircle2, X, Camera, Upload, Keyboard,
@@ -297,12 +298,32 @@ const ViewComprovanteModal: React.FC<ViewComprovanteModalProps> = ({ entry, onCl
             </div>
           ) : (
             <div className="w-full space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs text-slate-500 font-medium">Foto original do comprovante</span>
+                {docId && (
+                  <a
+                    href={`/api/v1/documents/${docId}/file?token=${localStorage.getItem('pontovision_token') || ''}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1 hover:underline"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    Abrir em tela cheia
+                  </a>
+                )}
+              </div>
+
               <div className="rounded-2xl border border-slate-200 bg-slate-900 overflow-hidden flex items-center justify-center p-2 min-h-[300px]">
-                <img
-                  src={`/api/v1/documents/${docId}/file`}
-                  alt="Comprovante de ponto"
-                  className="max-h-[60vh] max-w-full object-contain rounded-lg"
-                />
+                {docId ? (
+                  <AuthenticatedImage
+                    src={`/api/v1/documents/${docId}/file`}
+                    alt="Comprovante de ponto"
+                    className="max-h-[60vh] max-w-full object-contain rounded-lg shadow-md"
+                    fallbackText="Não foi possível recuperar a imagem deste comprovante"
+                  />
+                ) : (
+                  <p className="text-xs text-slate-400 py-10">Esta marcação não possui imagem de comprovante anexada.</p>
+                )}
               </div>
 
               {/* Estatísticas de Tamanho (Original vs Processada Sharp) */}
