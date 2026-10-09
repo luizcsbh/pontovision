@@ -84,14 +84,23 @@ export const ComprovanteREP: React.FC<ComprovanteREPProps> = ({
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
             * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { background: #fff; font-family: 'Share Tech Mono', 'Courier New', monospace; font-size: 11px; color: #000; }
-            .receipt { padding: 16px 12px; max-width: 320px; margin: 0 auto; }
+            body { background: #fff; font-family: 'Share Tech Mono', 'Courier New', monospace; font-size: 11px; color: #000; text-transform: uppercase; }
+            .receipt { 
+              padding: 16px 12px; 
+              max-width: 320px; 
+              margin: 0 auto; 
+              background-color: #fefce8 !important; 
+              text-transform: uppercase !important; 
+              -webkit-print-color-adjust: exact; 
+              print-color-adjust: exact; 
+            }
             .center { text-align: center; }
             .line { border-top: 1px dashed #000; margin: 6px 0; }
             .field-label { font-size: 10px; }
             .field-value { font-weight: bold; }
             .ad { word-break: break-all; font-size: 9px; }
             .title { font-size: 12px; font-weight: bold; letter-spacing: 0.5px; }
+            * { text-transform: uppercase; }
           </style>
         </head>
         <body>${content}</body>
@@ -109,12 +118,21 @@ export const ComprovanteREP: React.FC<ComprovanteREPProps> = ({
     inputType = 'text',
   ) => {
     if (!editMode) return <span>{rendered}</span>;
+    const isNumeric = field === 'nrep' || field === 'nsr';
     return (
       <input
         type={inputType}
+        inputMode={isNumeric ? 'numeric' : undefined}
+        pattern={isNumeric ? '[0-9]*' : undefined}
         defaultValue={data[field] ?? ''}
-        onBlur={(e) => onChange?.(field, e.target.value)}
-        className="bg-transparent border-b border-dashed border-black/40 focus:outline-none focus:border-black w-full font-bold"
+        onChange={isNumeric ? (e) => {
+          e.target.value = e.target.value.replace(/\D/g, '');
+        } : undefined}
+        onBlur={(e) => {
+          const val = isNumeric ? e.target.value.replace(/\D/g, '') : e.target.value;
+          onChange?.(field, val);
+        }}
+        className="bg-transparent border-b border-dashed border-black/40 focus:outline-none focus:border-black w-full font-bold uppercase"
       />
     );
   };
@@ -139,7 +157,7 @@ export const ComprovanteREP: React.FC<ComprovanteREPProps> = ({
       {/* Cupom térmico */}
       <div
         ref={receiptRef}
-        className="receipt bg-white text-black shadow-xl"
+        className="receipt text-black shadow-xl uppercase"
         style={{
           fontFamily: "'Share Tech Mono', 'Courier New', 'Courier', monospace",
           fontSize: '11px',
@@ -147,7 +165,8 @@ export const ComprovanteREP: React.FC<ComprovanteREPProps> = ({
           padding: '20px 16px',
           lineHeight: '1.55',
           letterSpacing: '0.3px',
-          // Sombra estilo papel térmico
+          backgroundColor: '#fefce8', // Amarelo quase branco estilo papel térmico
+          textTransform: 'uppercase', // Todas as letras em caixa alta
           boxShadow: '0 2px 8px rgba(0,0,0,0.15), inset 0 0 0 1px rgba(0,0,0,0.06)',
         }}
       >
@@ -173,11 +192,11 @@ export const ComprovanteREP: React.FC<ComprovanteREPProps> = ({
         </div>
         <div className="mb-1">
           <span style={{ fontSize: '10px' }}>NREP:</span>
-          <span className="ml-1 font-bold">{f('nrep', data.nrep || '___________________')}</span>
+          <span className="ml-1 font-bold">{f('nrep', data.nrep ? data.nrep.replace(/\D/g, '') : '___________________')}</span>
         </div>
         <div className="mb-1">
           <span style={{ fontSize: '10px' }}>MODELO:</span>
-          <span className="ml-1 font-bold">{f('modeloRep', data.modeloRep || '___________________')}</span>
+          <span className="ml-1 font-bold">IDCLASS BIO PROX</span>
         </div>
         <div className="mb-1">
           <span style={{ fontSize: '10px' }}>CNPJ:</span>
@@ -201,7 +220,7 @@ export const ComprovanteREP: React.FC<ComprovanteREPProps> = ({
         </div>
         <div className="mb-1">
           <span style={{ fontSize: '10px' }}>NSR:</span>
-          <span className="ml-1 font-bold">{f('nsr', data.nsr ? data.nsr.padStart(9, '0') : '000000000')}</span>
+          <span className="ml-1 font-bold">{f('nsr', data.nsr ? data.nsr.replace(/\D/g, '').padStart(9, '0') : '000000000')}</span>
         </div>
 
         <div style={{ borderTop: '1px dashed #000', margin: '6px 0' }} />

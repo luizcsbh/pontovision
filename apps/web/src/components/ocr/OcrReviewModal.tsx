@@ -61,15 +61,15 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
   const fields = ocrResult.extractedFields || {};
   const [step, setStep] = useState<Step>('review');
 
-  // 1. Apenas os 4 campos da OCR editáveis
+  // 1. Apenas os 4 campos da OCR editáveis (NREP e NSR somente números)
   const [workDate, setWorkDate] = useState<string>(fields.date || new Date().toISOString().slice(0, 10));
   const [time, setTime] = useState<string>(fields.time || fields.hora || '');
-  const [nrep, setNrep] = useState<string>(fields.nrep || '');
-  const [nsr, setNsr] = useState<string>(fields.nsr || '');
+  const [nrep, setNrep] = useState<string>((fields.nrep || '').replace(/\D/g, ''));
+  const [nsr, setNsr] = useState<string>((fields.nsr || '').replace(/\D/g, ''));
 
   // Dados de suporte para marcação
   const [type, setType] = useState<TimeEntryType>(TimeEntryType.ENTRY);
-  const [notes, setNotes] = useState<string>(`Extraído via OCR · NSR: ${fields.nsr || 'N/A'}`);
+  const [notes, setNotes] = useState<string>(`Extraído via OCR · NSR: ${(fields.nsr || '').replace(/\D/g, '') || 'N/A'}`);
   const [saving, setSaving] = useState(false);
 
   // Verificação de preenchimento dos 4 campos obrigatórios da OCR
@@ -97,22 +97,22 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
     ].filter(Boolean).join(' - ');
 
     return {
-      // 1. Dados extraídos da OCR
+      // 1. Dados extraídos da OCR (somente números em NREP e NSR)
       data: workDate,
       hora: time,
-      nrep: nrep,
-      nsr: nsr,
+      nrep: nrep.replace(/\D/g, ''),
+      nsr: nsr.replace(/\D/g, ''),
       // 2. Dados oriundos do CADASTRO DO USUÁRIO
-      nome: user?.name || 'FUNCIONÁRIO NÃO INFORMADO',
+      nome: (user?.name || 'FUNCIONÁRIO NÃO INFORMADO').toUpperCase(),
       cpf: user?.cpf || user?.cpfMasked || '',
-      razaoSocial: user?.company?.razaoSocial || 'EMPRESA NÃO CADASTRADA NO PERFIL',
+      razaoSocial: (user?.company?.razaoSocial || 'EMPRESA NÃO CADASTRADA NO PERFIL').toUpperCase(),
       cnpj: user?.company?.cnpj || '',
-      local: enderecoCompleto || 'LOCAL NÃO INFORMADO NO PERFIL',
+      local: (enderecoCompleto || 'LOCAL NÃO INFORMADO NO PERFIL').toUpperCase(),
       cei: user?.company?.cei || '000000000000000',
-      modeloRep: fields.modeloRep || 'IDCLASS BIO PROX',
+      modeloRep: 'IDCLASS BIO PROX',
       assinaturaDigital: fields.assinaturaDigital || '',
     };
-  }, [workDate, time, nrep, nsr, user, fields.modeloRep, fields.assinaturaDigital]);
+  }, [workDate, time, nrep, nsr, user, fields.assinaturaDigital]);
 
   const handleSaveEdits = async () => {
     const targetId = ocrResultId || ocrResult._id;
@@ -369,13 +369,15 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
                           <Cpu className="w-3.5 h-3.5 text-indigo-600" />
-                          <span>NREP *</span>
+                          <span>NREP (Somente Números) *</span>
                         </label>
                         <input
                           type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           required
                           value={nrep}
-                          onChange={(e) => setNrep(e.target.value)}
+                          onChange={(e) => setNrep(e.target.value.replace(/\D/g, ''))}
                           placeholder="Ex: 000140037502222046"
                           className="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white font-medium"
                         />
@@ -385,15 +387,18 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
                       <div>
                         <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center gap-1">
                           <Hash className="w-3.5 h-3.5 text-indigo-600" />
-                          <span>NSR *</span>
+                          <span>NSR (Somente Números) *</span>
                         </label>
                         <input
                           type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           required
                           value={nsr}
                           onChange={(e) => {
-                            setNsr(e.target.value);
-                            setNotes(`Extraído via OCR · NSR: ${e.target.value}`);
+                            const clean = e.target.value.replace(/\D/g, '');
+                            setNsr(clean);
+                            setNotes(`Extraído via OCR · NSR: ${clean}`);
                           }}
                           placeholder="Ex: 000069071"
                           className="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white font-bold"

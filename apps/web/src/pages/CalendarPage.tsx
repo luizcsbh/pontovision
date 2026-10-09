@@ -246,9 +246,9 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
       const fields = result.extractedFields || {};
       setOcrDate(fields.date || date);
       setOcrTime(fields.time || fields.hora || nowHHMM());
-      setOcrNrep(fields.nrep || '');
-      setOcrNsr(fields.nsr || '');
-      setOcrNotes(`Extraído via OCR · NSR: ${fields.nsr || 'N/A'}`);
+      setOcrNrep((fields.nrep || '').replace(/\D/g, ''));
+      setOcrNsr((fields.nsr || '').replace(/\D/g, ''));
+      setOcrNotes(`Extraído via OCR · NSR: ${(fields.nsr || '').replace(/\D/g, '') || 'N/A'}`);
     } catch (err: any) {
       setOcrErr(err.message || 'Falha ao processar imagem.');
     } finally {
@@ -542,31 +542,36 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
 
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">
-                  🔢 NREP *
+                  🔢 NREP (Somente Números) *
                 </label>
                 <input
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
                   value={ocrNrep}
-                  onChange={(e) => setOcrNrep(e.target.value)}
-                  placeholder="Número REP"
+                  onChange={(e) => setOcrNrep(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Número REP (somente números)"
                   className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[11px] font-mono focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
               <div>
                 <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">
-                  🏷️ NSR *
+                  🏷️ NSR (Somente Números) *
                 </label>
                 <input
                   type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   required
                   value={ocrNsr}
                   onChange={(e) => {
-                    setOcrNsr(e.target.value);
-                    setOcrNotes(`NSR: ${e.target.value}`);
+                    const clean = e.target.value.replace(/\D/g, '');
+                    setOcrNsr(clean);
+                    setOcrNotes(`NSR: ${clean}`);
                   }}
-                  placeholder="NSR"
+                  placeholder="NSR (somente números)"
                   className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[11px] font-mono font-bold focus:ring-1 focus:ring-blue-500"
                 />
               </div>

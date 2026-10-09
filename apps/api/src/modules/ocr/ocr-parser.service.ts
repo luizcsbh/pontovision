@@ -40,10 +40,15 @@ export class OcrParserService {
     if (timeMatch) { extracted.time = timeMatch; confidence.time = 90; }
     else { warnings.push('Hora não identificada com clareza.'); confidence.time = 0; }
 
-    // 4. NSR
+    // 4. NSR (somente números)
     const nsrMatch = this.extractNsr(lines, rawText);
-    if (nsrMatch) { extracted.nsr = nsrMatch; confidence.nsr = 85; }
-    else { warnings.push('NSR não identificado.'); confidence.nsr = 0; }
+    if (nsrMatch) {
+      extracted.nsr = nsrMatch.replace(/\D/g, '');
+      confidence.nsr = 85;
+    } else {
+      warnings.push('NSR não identificado.');
+      confidence.nsr = 0;
+    }
 
     // 5. Nome
     const nameMatch = this.extractName(lines);
@@ -62,11 +67,12 @@ export class OcrParserService {
     // 9. Local / Endereço
     extracted.local = this.extractLabelValue(rawText, ['LOCAL', 'ENDERECO', 'ENDEREÇO']);
 
-    // 10. NREP (número do REP)
-    extracted.nrep = this.extractLabelValue(rawText, ['NREP', 'N\\.REP', 'NUM\\.REP', 'NUMERO REP']);
+    // 10. NREP (número do REP - somente números)
+    const rawNrep = this.extractLabelValue(rawText, ['NREP', 'N\\.REP', 'NUM\\.REP', 'NUMERO REP']);
+    extracted.nrep = rawNrep ? rawNrep.replace(/\D/g, '') : undefined;
 
-    // 11. Modelo do REP
-    extracted.modeloRep = this.extractLabelValue(rawText, ['MODELO', 'MODELO REP']);
+    // 11. Modelo do REP (fixo IDCLASS BIO PROX)
+    extracted.modeloRep = 'IDCLASS BIO PROX';
 
     // 12. Assinatura Digital (AD) - pode ser multiline após "AD:"
     extracted.assinaturaDigital = this.extractAssinaturaDigital(rawText);
