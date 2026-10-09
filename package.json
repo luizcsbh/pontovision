@@ -1,0 +1,24 @@
+{
+  "name": "pontovision-ai",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema completo de gestão de espelhos de ponto com OCR local",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "dev:api": "npm run dev --workspace=apps/api",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev": "concurrently -n \"api,web\" -c \"blue,green\" \"npm run dev:api\" \"npm run dev:web\"",
+    "lint": "npm run lint --workspaces --if-present",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: pontovision-mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: pontovision
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: pontovision-api
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      API_PREFIX: /api/v1
+      MONGODB_URI: mongodb://mongodb:27017/pontovision
+      JWT_SECRET: change_me_in_production_secret_key_12345
+      STORAGE_LOCAL_PATH: /app/uploads
+      OCR_LANGUAGE: por
+      CORS_ORIGIN: http://localhost:5173
+    ports:
+      - "3000:3000"
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - mongodb
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: pontovision-web
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  mongodb_data:
+  uploads_data:
