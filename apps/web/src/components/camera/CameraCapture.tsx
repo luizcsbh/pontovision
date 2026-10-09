@@ -149,23 +149,27 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ onImageCaptured })
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <button
-            onClick={startCamera}
-            className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/50 hover:bg-blue-50 rounded-2xl transition-all group"
-          >
+          <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/50 hover:bg-blue-50 rounded-2xl transition-all group cursor-pointer">
             <div className="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-sm">
               <Camera className="w-7 h-7" />
             </div>
-            <span className="font-semibold text-slate-800">Abrir Câmera</span>
-            <span className="text-xs text-slate-500 mt-1">Fotografar pelo celular ou webcam</span>
-          </button>
+            <span className="font-semibold text-slate-800">Fotografar pelo Celular</span>
+            <span className="text-xs text-slate-500 mt-1">Abre a câmera traseira do dispositivo</span>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </label>
 
           <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-slate-300 hover:border-slate-500 bg-slate-50/50 hover:bg-slate-50 rounded-2xl transition-all group cursor-pointer">
             <div className="w-14 h-14 bg-slate-700 text-white rounded-2xl flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-sm">
               <Upload className="w-7 h-7" />
             </div>
-            <span className="font-semibold text-slate-800">Upload de Arquivo</span>
-            <span className="text-xs text-slate-500 mt-1">Galeria ou computador (JPEG, PNG, WEBP)</span>
+            <span className="font-semibold text-slate-800">Galeria ou Arquivo</span>
+            <span className="text-xs text-slate-500 mt-1">Selecionar foto salva ou documento</span>
             <input
               type="file"
               accept="image/*,application/pdf"
