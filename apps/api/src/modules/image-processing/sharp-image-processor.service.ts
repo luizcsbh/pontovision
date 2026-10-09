@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import sharp from 'sharp';
 import { IImageProcessor, IProcessedImageResult } from './image-processing.interface';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const sharp = require('sharp') as typeof import('sharp');
 
 @Injectable()
 export class SharpImageProcessorService implements IImageProcessor {
@@ -38,12 +40,12 @@ export class SharpImageProcessorService implements IImageProcessor {
   }
 
   async preprocessForOcr(buffer: Buffer): Promise<IProcessedImageResult> {
-    // Sharp pipeline specially calibrated for receipt/REP time clock thermal tickets:
-    // 1. Auto-orient
-    // 2. Resize to adequate OCR density (~1800px width)
-    // 3. Grayscale
-    // 4. Normalize contrast
-    // 5. Sharpen text edges
+    // Sharp pipeline calibrado para comprovantes/relógios REP de papel térmico:
+    // 1. Auto-orientação via EXIF
+    // 2. Resize para densidade adequada de OCR (~1800px)
+    // 3. Escala de cinza
+    // 4. Normalização de contraste
+    // 5. Nitidez para contornos de texto
     const pipeline = sharp(buffer)
       .rotate()
       .resize({
