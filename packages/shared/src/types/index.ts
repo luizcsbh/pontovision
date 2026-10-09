@@ -51,6 +51,7 @@ export enum AuditAction {
 export interface ICompanyInfo {
   razaoSocial?: string;
   cnpj?: string;
+  cei?: string;
   endereco?: string;
   cidade?: string;
   uf?: string;

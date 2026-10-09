@@ -83,6 +83,12 @@ export class OcrService {
         warnings: ocrOutput.warnings,
         reviewRequired: ocrOutput.reviewRequired,
         reviewStatus: 'PENDING',
+        imageStats: {
+          originalSize: doc.fileSize,
+          processedSize: doc.processedFileSize || preprocessed.size,
+          thumbSize: thumbSaved.size,
+          mimeType: doc.mimeType,
+        },
         processedAt: new Date(),
       });
 
@@ -102,20 +108,46 @@ export class OcrService {
     }
   }
 
-  async getOcrResult(id: string, userId: string): Promise<OcrResultDocument> {
+  async getOcrResult(id: string, userId: string): Promise<any> {
     const res = await this.ocrResultModel.findOne({
       _id: new Types.ObjectId(id),
       userId: new Types.ObjectId(userId),
     });
     if (!res) throw new NotFoundException('Resultado de OCR não encontrado.');
+
+    if (!res.imageStats) {
+      const doc = await this.documentModel.findById(res.documentId);
+      if (doc) {
+        res.imageStats = {
+          originalSize: doc.fileSize,
+          processedSize: doc.processedFileSize || doc.fileSize,
+          mimeType: doc.mimeType,
+        };
+      }
+    }
+
     return res;
   }
 
-  async getOcrByDocumentId(documentId: string, userId: string): Promise<OcrResultDocument | null> {
-    return this.ocrResultModel.findOne({
+  async getOcrByDocumentId(documentId: string, userId: string): Promise<any> {
+    const res = await this.ocrResultModel.findOne({
       documentId: new Types.ObjectId(documentId),
       userId: new Types.ObjectId(userId),
     });
+    if (!res) return null;
+
+    if (!res.imageStats) {
+      const doc = await this.documentModel.findById(new Types.ObjectId(documentId));
+      if (doc) {
+        res.imageStats = {
+          originalSize: doc.fileSize,
+          processedSize: doc.processedFileSize || doc.fileSize,
+          mimeType: doc.mimeType,
+        };
+      }
+    }
+
+    return res;
   }
 
   async updateEditedFields(

@@ -81,6 +81,14 @@ export class OcrResult {
   @Prop()
   thumbnailStorageKey?: string;
 
+  @Prop({ type: Object })
+  imageStats?: {
+    originalSize: number;
+    processedSize: number;
+    thumbSize?: number;
+    mimeType?: string;
+  };
+
   @Prop({ default: Date.now })
   processedAt: Date;
 }

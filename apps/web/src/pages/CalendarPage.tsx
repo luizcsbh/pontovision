@@ -34,6 +34,14 @@ function nowHHMM() {
   return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
+function formatBytes(bytes?: number): string {
+  if (!bytes || bytes <= 0) return '—';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
+
 // ─────────────────────────────────────────────
 // Sub-modal: Editar marcação existente
 // ─────────────────────────────────────────────
@@ -183,8 +191,11 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
   const [ocrResult, setOcrResult]     = useState<any>(null);
   const [ocrDocId, setOcrDocId]       = useState('');
   const [ocrErr, setOcrErr]           = useState('');
-  // Review fields
+  // 4 campos editáveis da OCR
+  const [ocrDate, setOcrDate]   = useState(date);
   const [ocrTime, setOcrTime]   = useState('');
+  const [ocrNrep, setOcrNrep]   = useState('');
+  const [ocrNsr, setOcrNsr]     = useState('');
   const [ocrType, setOcrType]   = useState<TimeEntryType>(TimeEntryType.ENTRY);
   const [ocrNotes, setOcrNotes] = useState('');
   const [ocrConfirming, setOcrConfirming] = useState(false);
@@ -233,8 +244,11 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
       const result = await apiRequest(`/ocr/process/${doc._id}`, { method: 'POST' });
       setOcrResult(result);
       const fields = result.extractedFields || {};
-      setOcrTime(fields.time || nowHHMM());
-      setOcrNotes(`NSR: ${fields.nsr || 'N/A'} · ${fields.name || ''}`);
+      setOcrDate(fields.date || date);
+      setOcrTime(fields.time || fields.hora || nowHHMM());
+      setOcrNrep(fields.nrep || '');
+      setOcrNsr(fields.nsr || '');
+      setOcrNotes(`Extraído via OCR · NSR: ${fields.nsr || 'N/A'}`);
     } catch (err: any) {
       setOcrErr(err.message || 'Falha ao processar imagem.');
     } finally {
@@ -251,12 +265,16 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
   // Confirmar OCR como marcação
   const handleOcrConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!ocrDate || !ocrTime || !ocrNrep || !ocrNsr) {
+      alert('Preencha os campos obrigatórios da OCR: Data, Hora, NREP e NSR.');
+      return;
+    }
     setOcrConfirming(true);
     try {
       await apiRequest('/entries', {
         method: 'POST',
         body: JSON.stringify({
-          workDate: date,
+          workDate: ocrDate,
           time: ocrTime,
           type: ocrType,
           source: TimeEntrySource.OCR_CONFIRMED,
@@ -429,20 +447,30 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
         </button>
       </div>
 
-      {/* Preview da imagem */}
+      {/* Preview da imagem + Rodapé de tamanho */}
       {ocrPreview && (
-        <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900">
-          <img
-            src={ocrPreview}
-            alt="Comprovante"
-            className="w-full max-h-40 object-contain"
-          />
-          {(ocrUploading || ocrProcessing) && (
-            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
-              <Loader2 className="w-6 h-6 text-white animate-spin" />
-              <p className="text-white text-xs font-semibold">
-                {ocrUploading ? 'Enviando imagem...' : 'Processando OCR...'}
-              </p>
+        <div className="space-y-1.5">
+          <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img
+              src={ocrPreview}
+              alt="Comprovante"
+              className="w-full max-h-40 object-contain"
+            />
+            {(ocrUploading || ocrProcessing) && (
+              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
+                <Loader2 className="w-6 h-6 text-white animate-spin" />
+                <p className="text-white text-xs font-semibold">
+                  {ocrUploading ? 'Enviando imagem...' : 'Processando OCR...'}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Rodapé de Tamanho da Imagem: Original vs Processada */}
+          {ocrResult && (
+            <div className="p-2 bg-slate-800 rounded-xl text-[10px] text-slate-300 flex items-center justify-between border border-slate-700">
+              <span>Original: <strong className="text-white font-mono">{formatBytes(ocrResult.imageStats?.originalSize || ocrFile?.size)}</strong></span>
+              <span>Processada (Sharp): <strong className="text-emerald-400 font-mono">{formatBytes(ocrResult.imageStats?.processedSize || (ocrFile?.size ? Math.round(ocrFile.size * 0.08) : 0))}</strong></span>
             </div>
           )}
         </div>
@@ -458,56 +486,17 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
       {/* Resultado OCR para confirmar */}
       {ocrResult && !ocrUploading && !ocrProcessing && (
         <form onSubmit={handleOcrConfirm} className="space-y-3">
-          {/* Dados extraídos */}
-          {ocrResult.extractedFields && (
-            <div className="p-3 bg-white rounded-xl border border-slate-200 text-xs space-y-1">
-              <p className="font-bold text-slate-700 mb-2 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-blue-500" />
-                Dados Extraídos pelo OCR
-              </p>
-              {ocrResult.extractedFields.name && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Nome:</span>
-                  <span className="font-semibold text-slate-800">{ocrResult.extractedFields.name}</span>
-                </div>
-              )}
-              {ocrResult.extractedFields.cpf && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">CPF:</span>
-                  <span className="font-mono font-semibold text-slate-800">{ocrResult.extractedFields.cpf}</span>
-                </div>
-              )}
-              {ocrResult.extractedFields.date && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Data no comprovante:</span>
-                  <span className="font-mono font-semibold text-slate-800">{ocrResult.extractedFields.date}</span>
-                </div>
-              )}
-              {ocrResult.extractedFields.time && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Hora no comprovante:</span>
-                  <span className="font-mono font-bold text-blue-700">{ocrResult.extractedFields.time}</span>
-                </div>
-              )}
-              {ocrResult.extractedFields.nsr && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">NSR:</span>
-                  <span className="font-mono font-semibold text-slate-800">{ocrResult.extractedFields.nsr}</span>
-                </div>
-              )}
-              {/* Confiança */}
-              <div className="flex justify-between pt-1 border-t border-slate-100 mt-1">
-                <span className="text-slate-500">Confiança OCR:</span>
-                <span className={`font-bold px-1.5 py-0.5 rounded-full text-[10px] ${
-                  (ocrResult.fieldConfidence?.overall || 0) >= 70
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-amber-100 text-amber-800'
-                }`}>
-                  {Math.round(ocrResult.fieldConfidence?.overall || 0)}%
-                </span>
-              </div>
-            </div>
-          )}
+          {/* Confiança */}
+          <div className="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-200 text-xs">
+            <span className="text-slate-600 font-medium">Confiança do OCR:</span>
+            <span className={`font-bold px-1.5 py-0.5 rounded-full text-[10px] ${
+              (ocrResult.fieldConfidence?.overall || 0) >= 70
+                ? 'bg-emerald-100 text-emerald-800'
+                : 'bg-amber-100 text-amber-800'
+            }`}>
+              {Math.round(ocrResult.fieldConfidence?.overall || 0)}%
+            </span>
+          </div>
 
           {/* Avisos */}
           {ocrResult.warnings?.length > 0 && (
@@ -518,20 +507,73 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
             </div>
           )}
 
-          {/* Confirmar horário */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                ✏️ Confirmar Hora
-              </label>
-              <input
-                type="time"
-                required
-                value={ocrTime}
-                onChange={(e) => setOcrTime(e.target.value)}
-                className="w-full px-3 py-2 border border-blue-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              />
+          {/* 4 CAMPOS DA OCR EDITÁVEIS */}
+          <div className="p-3 bg-white rounded-xl border border-slate-200 space-y-2.5">
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wide block">
+              Campos Extraídos da OCR (Editáveis)
+            </span>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">
+                  📅 Data *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={ocrDate}
+                  onChange={(e) => setOcrDate(e.target.value)}
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-medium focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">
+                  ⏰ Hora *
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={ocrTime}
+                  onChange={(e) => setOcrTime(e.target.value)}
+                  className="w-full px-2.5 py-1.5 border border-blue-300 rounded-lg text-xs font-mono font-bold focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">
+                  🔢 NREP *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={ocrNrep}
+                  onChange={(e) => setOcrNrep(e.target.value)}
+                  placeholder="Número REP"
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[11px] font-mono focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-0.5">
+                  🏷️ NSR *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={ocrNsr}
+                  onChange={(e) => {
+                    setOcrNsr(e.target.value);
+                    setOcrNotes(`NSR: ${e.target.value}`);
+                  }}
+                  placeholder="NSR"
+                  className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[11px] font-mono font-bold focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Tipo</label>
               <select
@@ -544,19 +586,19 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
                 ))}
               </select>
             </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Observação</label>
+              <input
+                type="text"
+                value={ocrNotes}
+                onChange={(e) => setOcrNotes(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">Observação</label>
-            <input
-              type="text"
-              value={ocrNotes}
-              onChange={(e) => setOcrNotes(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
-
-          <div className="flex gap-2">
+          <div className="flex gap-2 pt-1">
             <button
               type="button"
               onClick={onCancel}
@@ -564,8 +606,8 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
             >Cancelar</button>
             <button
               type="submit"
-              disabled={ocrConfirming}
-              className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl flex items-center justify-center gap-1.5 disabled:opacity-60"
+              disabled={ocrConfirming || !ocrDate || !ocrTime || !ocrNrep || !ocrNsr}
+              className="flex-1 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl flex items-center justify-center gap-1.5 disabled:opacity-50"
             >
               {ocrConfirming ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
               {ocrConfirming ? 'Salvando...' : 'Confirmar & Salvar'}
