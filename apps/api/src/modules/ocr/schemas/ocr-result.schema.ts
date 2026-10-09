@@ -25,12 +25,38 @@ export class OcrResult {
 
   @Prop({ type: Object, required: true })
   extractedFields: {
+    // Dados do trabalhador
     name?: string;
     cpf?: string;
     nsr?: string;
     date?: string;
     time?: string;
+    // Dados da empresa / REP
+    razaoSocial?: string;
+    cnpj?: string;
+    cei?: string;
+    local?: string;
+    nrep?: string;
+    modeloRep?: string;
+    // Assinatura digital
+    assinaturaDigital?: string;
     rawLines?: string[];
+  };
+
+  @Prop({ type: Object, default: {} })
+  editedFields: {
+    name?: string;
+    cpf?: string;
+    nsr?: string;
+    date?: string;
+    time?: string;
+    razaoSocial?: string;
+    cnpj?: string;
+    cei?: string;
+    local?: string;
+    nrep?: string;
+    modeloRep?: string;
+    assinaturaDigital?: string;
   };
 
   @Prop({ type: Object, required: true })
@@ -51,6 +77,9 @@ export class OcrResult {
 
   @Prop({ required: true, enum: ['PENDING', 'ACCEPTED', 'EDITED', 'REJECTED'], default: 'PENDING' })
   reviewStatus: string;
+
+  @Prop()
+  thumbnailStorageKey?: string;
 
   @Prop({ default: Date.now })
   processedAt: Date;

@@ -25,57 +25,52 @@ export class OcrParserService {
       rawLines: lines,
     };
 
-    // 1. Extração de CPF
+    // 1. CPF
     const cpfMatch = this.extractCpf(rawText);
-    if (cpfMatch) {
-      extracted.cpf = cpfMatch;
-      confidence.cpf = 95;
-    } else {
-      warnings.push('CPF não identificado no comprovante.');
-      confidence.cpf = 0;
-    }
+    if (cpfMatch) { extracted.cpf = cpfMatch; confidence.cpf = 95; }
+    else { warnings.push('CPF não identificado no comprovante.'); confidence.cpf = 0; }
 
-    // 2. Extração de Data
+    // 2. Data
     const dateMatch = this.extractDate(rawText);
-    if (dateMatch) {
-      extracted.date = dateMatch;
-      confidence.date = 90;
-    } else {
-      warnings.push('Data não identificada com clareza.');
-      confidence.date = 0;
-    }
+    if (dateMatch) { extracted.date = dateMatch; confidence.date = 90; }
+    else { warnings.push('Data não identificada com clareza.'); confidence.date = 0; }
 
-    // 3. Extração de Hora
+    // 3. Hora
     const timeMatch = this.extractTime(rawText);
-    if (timeMatch) {
-      extracted.time = timeMatch;
-      confidence.time = 90;
-    } else {
-      warnings.push('Hora não identificada com clareza.');
-      confidence.time = 0;
-    }
+    if (timeMatch) { extracted.time = timeMatch; confidence.time = 90; }
+    else { warnings.push('Hora não identificada com clareza.'); confidence.time = 0; }
 
-    // 4. Extração de NSR (Número Sequencial de Registro)
+    // 4. NSR
     const nsrMatch = this.extractNsr(lines, rawText);
-    if (nsrMatch) {
-      extracted.nsr = nsrMatch;
-      confidence.nsr = 85;
-    } else {
-      warnings.push('NSR não identificado (pode ser comprovante sem numeração sequencial).');
-      confidence.nsr = 0;
-    }
+    if (nsrMatch) { extracted.nsr = nsrMatch; confidence.nsr = 85; }
+    else { warnings.push('NSR não identificado.'); confidence.nsr = 0; }
 
-    // 5. Extração de Nome
+    // 5. Nome
     const nameMatch = this.extractName(lines);
-    if (nameMatch) {
-      extracted.name = nameMatch;
-      confidence.name = 80;
-    } else {
-      warnings.push('Nome do trabalhador não identificado com certeza.');
-      confidence.name = 0;
-    }
+    if (nameMatch) { extracted.name = nameMatch; confidence.name = 80; }
+    else { warnings.push('Nome do trabalhador não identificado.'); confidence.name = 0; }
 
-    // Se qualquer campo crítico faltar (Data ou Hora), a revisão humana é estritamente obrigatória
+    // 6. Razão Social
+    extracted.razaoSocial = this.extractLabelValue(rawText, ['RSOCIAL', 'RAZAO SOCIAL', 'RAZÃO SOCIAL', 'EMPRESA']);
+
+    // 7. CNPJ
+    extracted.cnpj = this.extractCnpj(rawText);
+
+    // 8. CEI
+    extracted.cei = this.extractLabelValue(rawText, ['CEI']);
+
+    // 9. Local / Endereço
+    extracted.local = this.extractLabelValue(rawText, ['LOCAL', 'ENDERECO', 'ENDEREÇO']);
+
+    // 10. NREP (número do REP)
+    extracted.nrep = this.extractLabelValue(rawText, ['NREP', 'N\\.REP', 'NUM\\.REP', 'NUMERO REP']);
+
+    // 11. Modelo do REP
+    extracted.modeloRep = this.extractLabelValue(rawText, ['MODELO', 'MODELO REP']);
+
+    // 12. Assinatura Digital (AD) - pode ser multiline após "AD:"
+    extracted.assinaturaDigital = this.extractAssinaturaDigital(rawText);
+
     const reviewRequired =
       !extracted.date ||
       !extracted.time ||
@@ -83,13 +78,33 @@ export class OcrParserService {
       warnings.length > 0 ||
       tesseractConfidence < 60;
 
-    return {
-      extractedFields: extracted,
-      fieldConfidence: confidence,
-      warnings,
-      reviewRequired,
-    };
+    return { extractedFields: extracted, fieldConfidence: confidence, warnings, reviewRequired };
   }
+
+  private extractLabelValue(text: string, labels: string[]): string | undefined {
+    for (const label of labels) {
+      const regex = new RegExp(`(?:${label})[:\\s]+(.+)`, 'i');
+      const match = text.match(regex);
+      if (match && match[1]) {
+        return match[1].trim().replace(/\s{2,}/g, ' ');
+      }
+    }
+    return undefined;
+  }
+
+  private extractCnpj(text: string): string | undefined {
+    const match = text.match(/\b\d{2}[.\s]?\d{3}[.\s]?\d{3}\/\d{4}[-]\d{2}\b/);
+    return match ? match[0].trim() : undefined;
+  }
+
+  private extractAssinaturaDigital(text: string): string | undefined {
+    const adMatch = text.match(/AD[:\s]+([A-Z0-9+/=\s]{10,})/is);
+    if (adMatch) {
+      return adMatch[1].replace(/\s+/g, '').trim();
+    }
+    return undefined;
+  }
+
 
   private extractCpf(text: string): string | undefined {
     // Regex para 11 dígitos com pontuação ou sem

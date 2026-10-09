@@ -53,6 +53,20 @@ export class OcrService {
       doc.processedStorageKey = processedSaved.storageKey;
       doc.processedFileSize = preprocessed.size;
 
+      // 3b. Gera thumbnail de baixa qualidade para exibição no frontend (JPEG 55%, máx 800px)
+      const sharp = require('sharp') as typeof import('sharp');
+      const thumbBuffer = await sharp(buffer)
+        .rotate()
+        .resize({ width: 800, withoutEnlargement: true, fit: 'inside' })
+        .jpeg({ quality: 55, mozjpeg: true })
+        .toBuffer();
+      const thumbSaved = await this.storageProvider.saveFile(
+        thumbBuffer,
+        `thumb_${doc.originalFilename}`,
+        'image/jpeg',
+        'thumbnails',
+      );
+
       // 4. Executa OCR local com Tesseract.js
       const ocrOutput = await this.localOcrService.recognizeText(preprocessed.buffer);
 
@@ -71,6 +85,9 @@ export class OcrService {
         reviewStatus: 'PENDING',
         processedAt: new Date(),
       });
+
+      ocrResult.thumbnailStorageKey = thumbSaved.storageKey;
+      await ocrResult.save();
 
       doc.status = DocumentStatus.OCR_PROCESSED;
       doc.ocrResultId = ocrResult._id as Types.ObjectId;
@@ -99,5 +116,36 @@ export class OcrService {
       documentId: new Types.ObjectId(documentId),
       userId: new Types.ObjectId(userId),
     });
+  }
+
+  async updateEditedFields(
+    id: string,
+    userId: string,
+    editedFields: Record<string, string>,
+  ): Promise<OcrResultDocument> {
+    const res = await this.ocrResultModel.findOne({
+      _id: new Types.ObjectId(id),
+      userId: new Types.ObjectId(userId),
+    });
+    if (!res) throw new NotFoundException('Resultado de OCR não encontrado.');
+
+    res.editedFields = { ...res.editedFields, ...editedFields };
+    res.reviewStatus = 'EDITED';
+    await res.save();
+    return res;
+  }
+
+  async getThumbnailBuffer(id: string, userId: string, res: any): Promise<void> {
+    const ocrResult = await this.ocrResultModel.findOne({
+      _id: new Types.ObjectId(id),
+      userId: new Types.ObjectId(userId),
+    });
+    if (!ocrResult || !ocrResult.thumbnailStorageKey) {
+      throw new NotFoundException('Thumbnail não disponível.');
+    }
+    const { buffer, mimeType } = await this.storageProvider.getFile(ocrResult.thumbnailStorageKey);
+    res.set('Content-Type', mimeType);
+    res.set('Cache-Control', 'private, max-age=3600');
+    res.end(buffer);
   }
 }

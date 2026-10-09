@@ -97,11 +97,21 @@ export interface ITimeDocument {
 }
 
 export interface IOcrExtractedFields {
+  // Dados do trabalhador
   name?: string;
   cpf?: string;
   nsr?: string;
   date?: string; // YYYY-MM-DD
   time?: string; // HH:mm
+  // Dados da empresa / REP
+  razaoSocial?: string;
+  cnpj?: string;
+  cei?: string;
+  local?: string;
+  nrep?: string;
+  modeloRep?: string;
+  // Assinatura digital
+  assinaturaDigital?: string;
   rawLines?: string[];
 }
 
