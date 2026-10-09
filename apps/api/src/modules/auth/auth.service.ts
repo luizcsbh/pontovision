@@ -30,12 +30,14 @@ export class AuthService {
       throw new ConflictException('Já existe um usuário cadastrado com este e-mail.');
     }
 
-    let cleanCpf: string | undefined = undefined;
-    if (dto.cpf) {
-      if (!isValidCPF(dto.cpf)) {
-        throw new BadRequestException('CPF informado é inválido.');
-      }
-      cleanCpf = normalizeCPF(dto.cpf);
+    if (!dto.cpf || !isValidCPF(dto.cpf)) {
+      throw new BadRequestException('CPF é obrigatório e deve ser válido.');
+    }
+    const cleanCpf = normalizeCPF(dto.cpf);
+
+    const existingCpf = await this.userModel.findOne({ cpf: cleanCpf });
+    if (existingCpf) {
+      throw new ConflictException('Já existe um usuário cadastrado com este CPF.');
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -159,7 +161,9 @@ export class AuthService {
       id: user._id.toString(),
       name: user.name,
       email: user.email,
+      cpf: user.cpf,
       cpfMasked: maskCPF(user.cpf),
+      company: user.company || {},
       role: user.role,
       timezone: user.timezone,
       preferences: user.preferences,

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Clock, Lock, Mail, User, Shield, AlertCircle, ArrowRight } from 'lucide-react';
-import { isValidCPF } from '@pontovision/shared';
+import { Clock, Lock, Mail, User, Shield, AlertCircle, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { isValidCPF, formatCPF, normalizeCPF } from '@pontovision/shared';
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,19 +14,33 @@ export const RegisterPage: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 11);
+    setCpf(formatCPF(raw));
+    if (errorMsg) setErrorMsg(null);
+  };
+
+  const isCpfValid = cpf.length > 0 ? isValidCPF(cpf) : null;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setErrorMsg(null);
 
-    if (cpf && !isValidCPF(cpf)) {
-      setErrorMsg('O CPF digitado não é válido.');
-      setIsSubmitting(false);
+    const cleanCpf = normalizeCPF(cpf);
+    if (!cleanCpf) {
+      setErrorMsg('O CPF é obrigatório para criação de conta.');
       return;
     }
 
+    if (!isValidCPF(cleanCpf)) {
+      setErrorMsg('O CPF digitado não é válido. Verifique os dígitos informados.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
     try {
-      await register({ name, email, password, cpf: cpf || undefined });
+      await register({ name, email, password, cpf: cleanCpf });
       navigate('/');
     } catch (err: any) {
       setErrorMsg(err.message || 'Falha ao realizar cadastro.');
@@ -57,7 +71,7 @@ export const RegisterPage: React.FC = () => {
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center space-x-1">
               <User className="w-3.5 h-3.5 text-slate-400" />
-              <span>Nome Completo</span>
+              <span>Nome Completo *</span>
             </label>
             <input
               type="text"
@@ -72,7 +86,7 @@ export const RegisterPage: React.FC = () => {
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center space-x-1">
               <Mail className="w-3.5 h-3.5 text-slate-400" />
-              <span>E-mail</span>
+              <span>E-mail *</span>
             </label>
             <input
               type="email"
@@ -85,23 +99,44 @@ export const RegisterPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center space-x-1">
-              <Shield className="w-3.5 h-3.5 text-slate-400" />
-              <span>CPF (Opcional - para batidas de ponto)</span>
-            </label>
-            <input
-              type="text"
-              value={cpf}
-              onChange={(e) => setCpf(e.target.value)}
-              placeholder="000.000.000-00"
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-semibold text-slate-700 flex items-center space-x-1">
+                <Shield className="w-3.5 h-3.5 text-blue-600" />
+                <span>CPF * (Obrigatório)</span>
+              </label>
+              <span className="text-[10px] text-amber-700 font-medium bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                Não poderá ser alterado
+              </span>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                required
+                value={cpf}
+                onChange={handleCpfChange}
+                placeholder="000.000.000-00"
+                maxLength={14}
+                className={`w-full px-4 py-2.5 bg-slate-50 border rounded-xl text-sm font-mono focus:outline-none focus:ring-2 ${
+                  isCpfValid === false
+                    ? 'border-red-300 focus:ring-red-400 bg-red-50/20'
+                    : isCpfValid === true
+                    ? 'border-emerald-300 focus:ring-emerald-400 bg-emerald-50/20'
+                    : 'border-slate-300 focus:ring-blue-500'
+                }`}
+              />
+              {isCpfValid === true && (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 absolute right-3 top-3" />
+              )}
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              Utilizado para vincular seus comprovantes fiscais (REP) ao seu espelho.
+            </p>
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center space-x-1">
               <Lock className="w-3.5 h-3.5 text-slate-400" />
-              <span>Senha (mínimo 8 caracteres)</span>
+              <span>Senha (mínimo 8 caracteres) *</span>
             </label>
             <input
               type="password"
@@ -117,7 +152,7 @@ export const RegisterPage: React.FC = () => {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center space-x-2 mt-2"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl shadow-md transition-all flex items-center justify-center space-x-2 mt-2 disabled:opacity-60"
           >
             <span>{isSubmitting ? 'Cadastrando...' : 'Criar Conta'}</span>
             <ArrowRight className="w-4 h-4" />

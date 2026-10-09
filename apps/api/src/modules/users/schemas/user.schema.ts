@@ -25,6 +25,15 @@ export class User {
   timezone: string;
 
   @Prop({ type: Object, default: {} })
+  company?: {
+    razaoSocial?: string;
+    cnpj?: string;
+    endereco?: string;
+    cidade?: string;
+    uf?: string;
+  };
+
+  @Prop({ type: Object, default: {} })
   preferences: {
     theme?: string;
     notifyDiscrepancies?: boolean;

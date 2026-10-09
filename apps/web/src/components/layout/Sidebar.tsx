@@ -9,6 +9,7 @@ import {
   FileText,
   Clock,
   Sparkles,
+  User,
 } from 'lucide-react';
 
 const navItems = [
@@ -19,6 +20,7 @@ const navItems = [
   { name: 'Espelho Virtual', path: '/virtual-mirror', icon: FileSpreadsheet },
   { name: 'Relatórios & Exportação', path: '/reports', icon: FileText },
   { name: 'Jornadas de Trabalho', path: '/schedules', icon: Clock },
+  { name: 'Meu Perfil & Empresa', path: '/profile', icon: User },
 ];
 
 export const Sidebar: React.FC = () => {

@@ -1,13 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiRequest } from '../api/client';
+import { ICompanyInfo } from '@pontovision/shared';
 
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  cpf?: string;
   cpfMasked?: string;
   role: string;
   timezone: string;
+  company?: ICompanyInfo;
   preferences?: Record<string, any>;
 }
 
@@ -16,7 +19,7 @@ interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   login: (data: { email: string; password: string }) => Promise<void>;
-  register: (data: { name: string; email: string; password: string; cpf?: string }) => Promise<void>;
+  register: (data: { name: string; email: string; password: string; cpf: string }) => Promise<void>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
 }

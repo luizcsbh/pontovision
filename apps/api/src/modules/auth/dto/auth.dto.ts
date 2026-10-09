@@ -17,10 +17,10 @@ export class RegisterDto {
   @MinLength(8, { message: 'A senha deve conter no mínimo 8 caracteres.' })
   password: string;
 
-  @ApiProperty({ example: '52998224725', required: false })
-  @IsOptional()
-  @IsString()
-  cpf?: string;
+  @ApiProperty({ example: '52998224725', required: true })
+  @IsString({ message: 'CPF deve ser texto.' })
+  @IsNotEmpty({ message: 'CPF é obrigatório para criação de conta.' })
+  cpf: string;
 }
 
 export class LoginDto {

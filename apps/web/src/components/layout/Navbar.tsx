@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut, User as UserIcon, Clock } from 'lucide-react';
 
@@ -8,7 +9,7 @@ export const Navbar: React.FC = () => {
   return (
     <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+        <Link to="/" className="flex items-center space-x-3 hover:opacity-90 transition-opacity">
           <div className="bg-blue-600 text-white p-2 rounded-xl flex items-center justify-center shadow-sm shadow-blue-500/20">
             <Clock className="w-5 h-5" />
           </div>
@@ -20,14 +21,21 @@ export const Navbar: React.FC = () => {
               OCR Local
             </span>
           </div>
-        </div>
+        </Link>
 
         {user && (
           <div className="flex items-center space-x-4">
-            <div className="text-right hidden sm:block">
-              <div className="text-sm font-semibold text-slate-800">{user.name}</div>
+            <Link
+              to="/profile"
+              title="Acessar Meu Perfil"
+              className="text-right hidden sm:block hover:opacity-80 transition-opacity"
+            >
+              <div className="text-sm font-semibold text-slate-800 flex items-center justify-end space-x-1">
+                <span>{user.name}</span>
+                <UserIcon className="w-3.5 h-3.5 text-blue-600" />
+              </div>
               <div className="text-xs text-slate-500">{user.email} {user.cpfMasked && `• ${user.cpfMasked}`}</div>
-            </div>
+            </Link>
             <button
               onClick={logout}
               title="Sair"

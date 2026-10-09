@@ -48,6 +48,14 @@ export enum AuditAction {
   OCR_EXTRACTION = 'OCR_EXTRACTION',
 }
 
+export interface ICompanyInfo {
+  razaoSocial?: string;
+  cnpj?: string;
+  endereco?: string;
+  cidade?: string;
+  uf?: string;
+}
+
 export interface IUser {
   id: string;
   name: string;
@@ -55,6 +63,7 @@ export interface IUser {
   cpf?: string;
   role: UserRole;
   timezone: string;
+  company?: ICompanyInfo;
   preferences?: {
     theme?: 'light' | 'dark' | 'system';
     notifyDiscrepancies?: boolean;
