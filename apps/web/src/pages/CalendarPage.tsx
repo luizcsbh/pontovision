@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { apiRequest } from '../api/client';
 import { minutesToTimeString, TimeEntryType, TimeEntrySource } from '@pontovision/shared';
+import { useAuth } from '../context/AuthContext';
+import { ComprovanteREP, ComprovanteREPData } from '../components/ocr/ComprovanteREP';
 import {
   ChevronLeft, ChevronRight, AlertTriangle, Clock, Plus, Trash2,
   FileText, Edit3, CheckCircle2, X, Camera, Upload, Keyboard,
-  Loader2, Image as ImageIcon, Sparkles,
+  Loader2, Image as ImageIcon, Sparkles, ExternalLink,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────
@@ -157,6 +159,169 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose, onSaved
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+};
+
+// ─────────────────────────────────────────────
+// Sub-modal: Visualizar Comprovante REP
+// ─────────────────────────────────────────────
+interface ViewComprovanteModalProps {
+  entry: any;
+  onClose: () => void;
+}
+
+const ViewComprovanteModal: React.FC<ViewComprovanteModalProps> = ({ entry, onClose }) => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [ocrData, setOcrData] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'receipt' | 'image'>('receipt');
+
+  const docId = typeof entry.documentId === 'object' ? entry.documentId?._id : entry.documentId;
+
+  useEffect(() => {
+    let isMounted = true;
+    if (docId) {
+      setLoading(true);
+      apiRequest(`/ocr/document/${docId}`)
+        .then((res) => {
+          if (isMounted && res) {
+            setOcrData(res);
+          }
+        })
+        .catch((err) => {
+          console.warn('OCR não encontrado para o documento:', err);
+        })
+        .finally(() => {
+          if (isMounted) setLoading(false);
+        });
+    }
+    return () => {
+      isMounted = false;
+    };
+  }, [docId]);
+
+  const nsrFromNotes = entry.notes?.match(/NSR[:\s]+(\d+)/i)?.[1];
+  const nrepFromNotes = entry.notes?.match(/NREP[:\s]+(\d+)/i)?.[1];
+
+  const fields = ocrData?.editedFields || ocrData?.extractedFields || {};
+
+  const enderecoCompleto = [
+    user?.company?.endereco,
+    user?.company?.cidade,
+    user?.company?.uf,
+  ].filter(Boolean).join(' - ');
+
+  const rawNrep = fields.nrep || nrepFromNotes || '000140037502222046';
+  const rawNsr = fields.nsr || nsrFromNotes || '000000001';
+
+  const comprovanteData: ComprovanteREPData = {
+    data: fields.date || entry.workDate,
+    hora: (fields.time || fields.hora || entry.time || '').slice(0, 5),
+    nrep: rawNrep.replace(/\D/g, ''),
+    nsr: rawNsr.replace(/\D/g, ''),
+    nome: (user?.name || 'FUNCIONÁRIO NÃO INFORMADO').toUpperCase(),
+    cpf: user?.cpf || user?.cpfMasked || '',
+    razaoSocial: (user?.company?.razaoSocial || 'EMPRESA NÃO CADASTRADA NO PERFIL').toUpperCase(),
+    cnpj: user?.company?.cnpj || '',
+    local: (enderecoCompleto || 'LOCAL NÃO INFORMADO NO PERFIL').toUpperCase(),
+    cei: user?.company?.cei || '000000000000000',
+    modeloRep: 'IDCLASS BIO PROX',
+    assinaturaDigital: fields.assinaturaDigital || '',
+  };
+
+  const imageStats = ocrData?.imageStats || {};
+  const originalSize = imageStats.originalSize || ocrData?.fileSize || 0;
+  const processedSize = imageStats.processedSize || ocrData?.processedFileSize || 0;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 bg-blue-100 text-blue-700 rounded-xl">
+              <FileText className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-slate-800 text-sm">Comprovante de Registro de Ponto</h3>
+              <p className="text-xs text-slate-400">
+                {entry.workDate} às {entry.time?.slice(0, 5)} · {ENTRY_TYPE_LABELS[entry.type] || entry.type}
+              </p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-200/70 rounded-xl text-slate-400 transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Abas se houver documento anexado */}
+        {docId && (
+          <div className="flex border-b border-slate-200 bg-slate-100/50 px-6 pt-2 gap-2">
+            <button
+              onClick={() => setActiveTab('receipt')}
+              className={`pb-2.5 px-3 text-xs font-bold transition-all border-b-2 flex items-center gap-1.5 ${
+                activeTab === 'receipt'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Comprovante Térmico REP
+            </button>
+            <button
+              onClick={() => setActiveTab('image')}
+              className={`pb-2.5 px-3 text-xs font-bold transition-all border-b-2 flex items-center gap-1.5 ${
+                activeTab === 'image'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <ImageIcon className="w-3.5 h-3.5" />
+              Foto / Documento Original
+            </button>
+          </div>
+        )}
+
+        {/* Conteúdo */}
+        <div className="p-6 overflow-y-auto flex-1 flex flex-col items-center">
+          {loading ? (
+            <div className="py-16 flex flex-col items-center gap-3">
+              <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+              <p className="text-xs text-slate-500 font-medium">Carregando dados do comprovante...</p>
+            </div>
+          ) : activeTab === 'receipt' ? (
+            <div className="w-full flex flex-col items-center">
+              <ComprovanteREP data={comprovanteData} showActions={true} />
+            </div>
+          ) : (
+            <div className="w-full space-y-4">
+              <div className="rounded-2xl border border-slate-200 bg-slate-900 overflow-hidden flex items-center justify-center p-2 min-h-[300px]">
+                <img
+                  src={`/api/v1/documents/${docId}/file`}
+                  alt="Comprovante de ponto"
+                  className="max-h-[60vh] max-w-full object-contain rounded-lg"
+                />
+              </div>
+
+              {/* Estatísticas de Tamanho (Original vs Processada Sharp) */}
+              {(originalSize > 0 || processedSize > 0) && (
+                <div className="p-3 bg-slate-800 rounded-xl text-xs text-slate-300 flex items-center justify-between border border-slate-700">
+                  <span>
+                    Original: <strong className="text-white font-mono">{formatBytes(originalSize)}</strong>
+                  </span>
+                  <span>
+                    Processada (Sharp):{' '}
+                    <strong className="text-emerald-400 font-mono">
+                      {formatBytes(processedSize || Math.round(originalSize * 0.08))}
+                    </strong>
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -635,6 +800,7 @@ export const CalendarPage: React.FC = () => {
   const [loading, setLoading]     = useState(true);
   const [selectedDay, setSelectedDay] = useState<any>(null);
   const [editingEntry, setEditingEntry] = useState<any>(null);
+  const [viewingReceiptEntry, setViewingReceiptEntry] = useState<any>(null);
   const [showAddPanel, setShowAddPanel] = useState(false);
 
   const fetchMonth = useCallback(async (ym: string) => {
@@ -878,18 +1044,18 @@ export const CalendarPage: React.FC = () => {
 
                         {/* Ações */}
                         <div className="flex items-center gap-1 shrink-0">
-                          {/* Ver comprovante */}
-                          {entry.documentId && (
-                            <a
-                              href={`/api/v1/documents/${entry.documentId?._id || entry.documentId}/file`}
-                              target="_blank"
-                              rel="noreferrer"
-                              title="Ver comprovante"
-                              className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                            >
-                              <ImageIcon className="w-3.5 h-3.5" />
-                            </a>
-                          )}
+                          {/* Visualizar comprovante REP */}
+                          <button
+                            onClick={() => setViewingReceiptEntry(entry)}
+                            title="Visualizar Comprovante REP"
+                            className={`p-1.5 rounded-lg transition-colors flex items-center gap-1 ${
+                              entry.documentId
+                                ? 'text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200'
+                                : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'
+                            }`}
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                          </button>
                           {/* Editar */}
                           <button
                             onClick={() => setEditingEntry(entry)}
@@ -944,6 +1110,14 @@ export const CalendarPage: React.FC = () => {
           entry={editingEntry}
           onClose={() => setEditingEntry(null)}
           onSaved={handleSaved}
+        />
+      )}
+
+      {/* Modal de visualização do comprovante */}
+      {viewingReceiptEntry && (
+        <ViewComprovanteModal
+          entry={viewingReceiptEntry}
+          onClose={() => setViewingReceiptEntry(null)}
         />
       )}
     </div>
