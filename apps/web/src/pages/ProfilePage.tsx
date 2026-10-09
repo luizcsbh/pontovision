@@ -154,6 +154,13 @@ export const ProfilePage: React.FC = () => {
   const [scheduleModalError, setScheduleModalError] = useState('');
   const [scheduleGlobalSuccess, setScheduleGlobalSuccess] = useState('');
 
+  // Escala Padrão Ativa para o Resumo Semanal
+  const activeSchedule = schedules.find((s) => s.isDefault) || schedules[0];
+  const activeWeekMins = activeSchedule ? totalWeekMinutes(activeSchedule.weeklyRules || []) : 0;
+  const activeWorkDaysCount = activeSchedule
+    ? activeSchedule.weeklyRules?.filter((r) => r.isEnabled).length || 0
+    : 0;
+
   // Carrega dados iniciais do usuário
   useEffect(() => {
     if (user) {
@@ -450,7 +457,7 @@ export const ProfilePage: React.FC = () => {
           }`}
         >
           <Clock className="w-4 h-4" />
-          <span>Jornadas de Trabalho ({schedules.length})</span>
+          <span>Minhas Jornadas ({schedules.length})</span>
         </button>
       </div>
 
@@ -712,37 +719,100 @@ export const ProfilePage: React.FC = () => {
       )}
 
       {/* ───────────────────────────────────────────────────────────── */}
-      {/* ABA 3: JORNADAS DE TRABALHO */}
+      {/* ───────────────────────────────────────────────────────────── */}
+      {/* ABA 3: MINHAS JORNADAS */}
       {/* ───────────────────────────────────────────────────────────── */}
       {activeTab === 'schedules' && (
         <div className="space-y-6">
-          <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
-              <div>
-                <h2 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
-                  <Clock className="w-5 h-5 text-blue-600" />
-                  <span>Minhas Jornadas de Trabalho</span>
-                </h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  Cadastre diferentes escalas de trabalho (ex: 44h semanais, 12x36, estágio 30h) e defina qual é a padrão ativa.
-                </p>
-              </div>
+          {/* Card de Resumo Semanal da Escala Padrão */}
+            {activeSchedule && (
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-md space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 bg-white/20 rounded-full flex items-center space-x-1">
+                        <Star className="w-3 h-3 fill-white" />
+                        <span>Resumo da Escala Ativa</span>
+                      </span>
+                      <span className="text-sm font-semibold opacity-90">{activeSchedule.name}</span>
+                    </div>
+                    <p className="text-3xl font-black mt-2 font-mono">{fmtHours(activeWeekMins)}</p>
+                    <p className="text-xs opacity-80 mt-0.5">
+                      {activeWorkDaysCount} dias de trabalho/semana ·{' '}
+                      {fmtHours(Math.round(activeWeekMins / (activeWorkDaysCount || 1)))} média/dia ·{' '}
+                      Tolerância CLT: {activeSchedule.toleranceMinutes || 10} min
+                    </p>
+                  </div>
 
-              <button
-                onClick={handleOpenNewSchedule}
-                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-2"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Nova Jornada</span>
-              </button>
-            </div>
+                  {/* Mini calendário visual por dia */}
+                  <div className="flex gap-1.5 flex-wrap">
+                    {DAY_NAMES.map((d, idx) => {
+                      const r = activeSchedule.weeklyRules?.find((rule) => rule.dayOfWeek === idx);
+                      const isEnabled = r?.isEnabled;
+                      const mins = isEnabled ? calcWorkMinutes(r) : 0;
+                      return (
+                        <div key={idx} className="flex flex-col items-center gap-1">
+                          <span className="text-[10px] opacity-70 font-medium">{d.slice(0, 3)}</span>
+                          <div
+                            className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
+                              isEnabled ? 'bg-white text-blue-700 shadow-sm' : 'bg-white/10 text-white/40'
+                            }`}
+                            title={isEnabled ? `${fmtHours(mins)} de trabalho (${r?.plannedEntry} - ${r?.plannedExit})` : 'Folga'}
+                          >
+                            {isEnabled ? fmtHours(mins) : '—'}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
-            {scheduleGlobalSuccess && (
-              <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center space-x-2 text-emerald-800 text-xs font-semibold">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-                <span>{scheduleGlobalSuccess}</span>
+                {/* Indicador de conformidade CLT */}
+                {activeWeekMins > 0 && (
+                  <div className="flex items-center space-x-2 text-xs opacity-90 bg-white/10 rounded-xl p-3">
+                    <Info className="w-4 h-4 shrink-0" />
+                    <span>
+                      Jornada CLT padrão: <strong>44h semanais</strong> (2.640 min).
+                      Sua escala soma <strong>{fmtHours(activeWeekMins)}</strong>.
+                      {activeWeekMins > 2640 && (
+                        <span className="font-bold text-amber-200"> ⚠️ Excede o limite semanal CLT padrão.</span>
+                      )}
+                      {activeWeekMins === 2640 && (
+                        <span className="font-bold text-emerald-200"> ✅ Carga horária semanal exatamente conforme Art. 58 da CLT.</span>
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
+
+            <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
+                    <Clock className="w-5 h-5 text-blue-600" />
+                    <span>Minhas Jornadas de Trabalho</span>
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Cadastre diferentes escalas de trabalho (ex: 44h semanais, 12x36, estágio 30h) e defina qual é a padrão ativa.
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleOpenNewSchedule}
+                  className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-sm transition-colors flex items-center space-x-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Nova Jornada</span>
+                </button>
+              </div>
+
+              {scheduleGlobalSuccess && (
+                <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center space-x-2 text-emerald-800 text-xs font-semibold">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                  <span>{scheduleGlobalSuccess}</span>
+                </div>
+              )}
 
             {/* Lista de Jornadas */}
             <div className="mt-6 space-y-4">

@@ -9,7 +9,6 @@ import { CapturePage } from './pages/CapturePage';
 import { ManualEntryPage } from './pages/ManualEntryPage';
 import { VirtualMirrorPage } from './pages/VirtualMirrorPage';
 import { ReportsPage } from './pages/ReportsPage';
-import { SchedulesPage } from './pages/SchedulesPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -32,7 +31,7 @@ export const App: React.FC = () => {
               <Route path="/entry/new" element={<ManualEntryPage />} />
               <Route path="/virtual-mirror" element={<VirtualMirrorPage />} />
               <Route path="/reports" element={<ReportsPage />} />
-              <Route path="/schedules" element={<SchedulesPage />} />
+              <Route path="/schedules" element={<Navigate to="/profile" replace />} />
               <Route path="/profile" element={<ProfilePage />} />
             </Route>
 

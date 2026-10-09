@@ -19,8 +19,7 @@ const navItems = [
   { name: 'Marcação Manual', path: '/entry/new', icon: PlusCircle },
   { name: 'Espelho Virtual', path: '/virtual-mirror', icon: FileSpreadsheet },
   { name: 'Relatórios & Exportação', path: '/reports', icon: FileText },
-  { name: 'Jornadas de Trabalho', path: '/schedules', icon: Clock },
-  { name: 'Meu Perfil & Empresa', path: '/profile', icon: User },
+  { name: 'Minhas Jornadas & Perfil', path: '/profile', icon: User },
 ];
 
 export const Sidebar: React.FC = () => {
