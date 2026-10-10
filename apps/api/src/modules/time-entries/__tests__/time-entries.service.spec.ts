@@ -46,6 +46,22 @@ describe('TimeEntriesService', () => {
     expect(mockEntryModel.create).toHaveBeenCalled();
   });
 
+  it('should only allow compensated entries through the bank compensation flow', async () => {
+    await expect(
+      service.create(
+        {
+          workDate: '2026-10-09',
+          time: '08:00',
+          type: TimeEntryType.ENTRY,
+          source: TimeEntrySource.COMPENSATED,
+        },
+        '507f1f77bcf86cd799439011',
+      ),
+    ).rejects.toThrow('Use o fluxo de compensação do banco');
+
+    expect(mockEntryModel.create).not.toHaveBeenCalled();
+  });
+
   it('should block creation and throw BadRequestException if entry of that type already exists on the day', async () => {
     mockEntryModel.findOne.mockResolvedValue({
       _id: 'existing-entry-1',
@@ -143,6 +159,19 @@ describe('TimeEntriesService', () => {
         nsr: '000069071',
         notes: undefined,
       }),
+    );
+  });
+
+  it('should query history up to endDate when startDate is omitted', async () => {
+    const exec = jest.fn().mockResolvedValue([]);
+    const populate = jest.fn().mockReturnValue({ exec });
+    const sort = jest.fn().mockReturnValue({ populate });
+    mockEntryModel.find.mockReturnValue({ sort });
+
+    await service.findByUserAndDateRange('507f1f77bcf86cd799439011', undefined, '2026-10-31');
+
+    expect(mockEntryModel.find).toHaveBeenCalledWith(
+      expect.objectContaining({ workDate: { $lte: '2026-10-31' } }),
     );
   });
 });

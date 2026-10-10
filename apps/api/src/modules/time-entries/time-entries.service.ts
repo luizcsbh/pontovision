@@ -31,6 +31,10 @@ export class TimeEntriesService {
   }
 
   async create(dto: CreateTimeEntryDto, userId: string): Promise<TimeEntryDocument> {
+    if (dto.source === TimeEntrySource.COMPENSATED) {
+      throw new BadRequestException('Use o fluxo de compensação do banco para registrar essa marcação.');
+    }
+
     // Regra: Bloquear novo cadastro do mesmo tipo no mesmo dia, salvo se a anterior foi excluída
     const existing = await this.entryModel.findOne({
       userId: new Types.ObjectId(userId),
@@ -74,6 +78,51 @@ export class TimeEntriesService {
     return entry;
   }
 
+  async createCompensationEntries(
+    workDate: string,
+    punches: Array<{ time: string; type: TimeEntryType }>,
+    userId: string,
+  ) {
+    const userObjectId = new Types.ObjectId(userId);
+    const existing = await this.entryModel.findOne({
+      userId: userObjectId,
+      workDate,
+      type: { $in: punches.map((punch) => punch.type) },
+      status: { $ne: TimeEntryStatus.ARCHIVED },
+    });
+
+    if (existing) {
+      throw new BadRequestException('Já existem marcações registradas para essa data.');
+    }
+
+    const entries = await this.entryModel.insertMany(
+      punches.map((punch) => ({
+        userId: userObjectId,
+        workDate,
+        time: punch.time,
+        type: punch.type,
+        source: TimeEntrySource.COMPENSATED,
+        status: TimeEntryStatus.ACTIVE,
+        documentId: null,
+        notes: 'Compensado do banco de horas',
+        createdBy: userObjectId,
+      })),
+    );
+
+    for (const entry of entries) {
+      await this.auditService.logAction({
+        userId,
+        actorId: userId,
+        entityType: 'TimeEntry',
+        entityId: entry._id.toString(),
+        action: AuditAction.CREATE,
+        changedFields: { created: { before: null, after: entry.toObject() } },
+      });
+    }
+
+    return entries;
+  }
+
   async findByUserAndDateRange(userId: string, startDate?: string, endDate?: string) {
     const query: any = {
       userId: new Types.ObjectId(userId),
@@ -84,6 +133,8 @@ export class TimeEntriesService {
       query.workDate = { $gte: startDate, $lte: endDate };
     } else if (startDate) {
       query.workDate = startDate;
+    } else if (endDate) {
+      query.workDate = { $lte: endDate };
     }
 
     return this.entryModel
@@ -131,7 +182,9 @@ export class TimeEntriesService {
     if (dto.type) entry.type = dto.type;
     if (dto.nsr !== undefined) entry.nsr = dto.nsr ? dto.nsr.trim() : undefined;
     if (dto.notes !== undefined) entry.notes = dto.notes;
-    entry.source = TimeEntrySource.CORRECTED;
+    if (entry.source !== TimeEntrySource.COMPENSATED) {
+      entry.source = TimeEntrySource.CORRECTED;
+    }
 
     await entry.save();
 

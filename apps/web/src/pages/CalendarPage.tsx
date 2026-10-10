@@ -1001,7 +1001,7 @@ export const CalendarPage: React.FC = () => {
               { s: 'S', full: 'Sex' },
               { s: 'S', full: 'Sáb' },
             ].map((d, idx) => (
-              <span key={idx}>
+              <span key={idx} className={idx === 0 ? 'text-red-600' : undefined}>
                 <span className="sm:hidden">{d.s}</span>
                 <span className="hidden sm:inline">{d.full}</span>
               </span>
@@ -1018,6 +1018,7 @@ export const CalendarPage: React.FC = () => {
             {monthData?.days?.map((day: any) => {
               const isSelected   = selectedDay?.date === day.date;
               const isToday      = day.date === todayISO();
+              const isSunday     = day.dayOfWeek === 0;
               const hasPunches   = (day.allEntries?.length || day.rawEntries?.length || day.calculation.entries.length) > 0;
               const workedMin    = day.calculation.totalWorkedMinutes;
               const balanceMin   = day.calculation.balanceMinutes;
@@ -1049,7 +1050,7 @@ export const CalendarPage: React.FC = () => {
                 >
                   {/* Número do dia + badges */}
                   <div className="flex items-start justify-between">
-                    <span className={`text-[11px] sm:text-xs font-bold ${isToday ? 'text-blue-700 font-extrabold' : 'text-slate-700'}`}>
+                    <span className={`text-[11px] sm:text-xs font-bold ${isToday ? 'text-blue-700 font-extrabold' : isSunday ? 'text-red-600' : 'text-slate-700'}`}>
                       {parseInt(day.date.slice(8), 10)}
                     </span>
                     <div className="flex flex-col items-end gap-0.5">

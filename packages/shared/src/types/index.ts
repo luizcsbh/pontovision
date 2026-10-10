@@ -17,6 +17,7 @@ export enum TimeEntrySource {
   OCR_CONFIRMED = 'OCR_CONFIRMED',
   IMAGE_IMPORTED = 'IMAGE_IMPORTED',
   CORRECTED = 'CORRECTED',
+  COMPENSATED = 'COMPENSATED',
 }
 
 export enum TimeEntryStatus {

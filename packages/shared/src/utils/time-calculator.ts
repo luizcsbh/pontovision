@@ -37,6 +37,74 @@ export function calculateExpirationDate(dateStr: string, months = 6): string {
   return `${y}-${m}-${d}`;
 }
 
+export interface BankHourCredit {
+  workDate: string;
+  minutes: number;
+}
+
+export interface BankHourCompensation {
+  workDate: string;
+  minutes: number;
+}
+
+export interface AvailableBankHours {
+  minutes: number;
+  earliestExpirationDate?: string;
+  latestExpirationDate?: string;
+}
+
+export function calculateAvailableBankHours(
+  credits: BankHourCredit[],
+  compensations: BankHourCompensation[],
+  asOfDate: string,
+): AvailableBankHours {
+  const events = [
+    ...credits.filter((credit) => credit.minutes > 0).map((credit) => ({ ...credit, kind: 'credit' as const })),
+    ...compensations.filter((item) => item.minutes > 0).map((item) => ({ ...item, kind: 'compensation' as const })),
+  ].sort((a, b) => a.workDate.localeCompare(b.workDate) || (a.kind === 'credit' ? -1 : 1));
+  const lots: Array<{ workDate: string; expirationDate: string; minutes: number }> = [];
+
+  for (const event of events) {
+    if (event.workDate > asOfDate) continue;
+
+    for (let index = lots.length - 1; index >= 0; index--) {
+      if (lots[index].expirationDate < event.workDate) lots.splice(index, 1);
+    }
+
+    if (event.kind === 'credit') {
+      lots.push({
+        workDate: event.workDate,
+        expirationDate: calculateExpirationDate(event.workDate),
+        minutes: event.minutes,
+      });
+      continue;
+    }
+
+    let remaining = event.minutes;
+    lots.sort((a, b) => a.expirationDate.localeCompare(b.expirationDate) || a.workDate.localeCompare(b.workDate));
+    for (const lot of lots) {
+      const deduction = Math.min(lot.minutes, remaining);
+      lot.minutes -= deduction;
+      remaining -= deduction;
+      if (remaining === 0) break;
+    }
+    for (let index = lots.length - 1; index >= 0; index--) {
+      if (lots[index].minutes === 0) lots.splice(index, 1);
+    }
+  }
+
+  for (let index = lots.length - 1; index >= 0; index--) {
+    if (lots[index].expirationDate < asOfDate) lots.splice(index, 1);
+  }
+
+  const expirations = lots.map((lot) => lot.expirationDate).sort();
+  return {
+    minutes: lots.reduce((total, lot) => total + lot.minutes, 0),
+    earliestExpirationDate: expirations[0],
+    latestExpirationDate: expirations[expirations.length - 1],
+  };
+}
+
 /**
  * Converts "HH:mm" or "HH:mm:ss" to minutes from midnight.
  */

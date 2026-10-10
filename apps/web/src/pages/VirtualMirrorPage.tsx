@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { minutesToTimeString, TimeEntryType, calculateExpirationDate } from '@pontovision/shared';
-import { Printer, Download, ChevronLeft, ChevronRight, FileSpreadsheet, CalendarClock, AlertTriangle } from 'lucide-react';
+import { minutesToTimeString, TimeEntrySource, calculateExpirationDate } from '@pontovision/shared';
+import { Printer, Download, FileSpreadsheet, CalendarClock, AlertTriangle, Check, X } from 'lucide-react';
 
 const WEEKDAYS = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 
@@ -13,6 +13,11 @@ export const VirtualMirrorPage: React.FC = () => {
   });
   const [monthData, setMonthData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [showCompensation, setShowCompensation] = useState(false);
+  const [compensationDate, setCompensationDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [compensationError, setCompensationError] = useState('');
+  const [compensationMessage, setCompensationMessage] = useState('');
+  const [savingCompensation, setSavingCompensation] = useState(false);
 
   const fetchMirror = async (ym: string) => {
     try {
@@ -32,6 +37,31 @@ export const VirtualMirrorPage: React.FC = () => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleCompensation = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSavingCompensation(true);
+    setCompensationError('');
+    setCompensationMessage('');
+    try {
+      await apiRequest('/calendar/compensate', {
+        method: 'POST',
+        body: JSON.stringify({ workDate: compensationDate }),
+      });
+      setShowCompensation(false);
+      const compensationMonth = compensationDate.slice(0, 7);
+      if (compensationMonth === currentYearMonth) {
+        await fetchMirror(compensationMonth);
+      } else {
+        setCurrentYearMonth(compensationMonth);
+      }
+      setCompensationMessage('Compensação registrada. Saldo atualizado.');
+    } catch (error) {
+      setCompensationError(error instanceof Error ? error.message : 'Não foi possível registrar a compensação.');
+    } finally {
+      setSavingCompensation(false);
+    }
   };
 
   const handleDownloadPdf = async () => {
@@ -82,6 +112,17 @@ export const VirtualMirrorPage: React.FC = () => {
           />
 
           <button
+            onClick={() => {
+              setCompensationError('');
+              setShowCompensation(true);
+            }}
+            className="px-3 sm:px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-xs sm:text-sm rounded-xl transition-colors shadow-sm flex items-center justify-center space-x-1.5 flex-1 sm:flex-initial"
+          >
+            <Check className="w-4 h-4" />
+            <span>Compensar banco</span>
+          </button>
+
+          <button
             onClick={handlePrint}
             className="px-3 sm:px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs sm:text-sm rounded-xl transition-colors shadow-sm flex items-center justify-center space-x-1.5 flex-1 sm:flex-initial"
           >
@@ -106,6 +147,61 @@ export const VirtualMirrorPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {compensationMessage && (
+        <p role="status" className="print:hidden text-sm font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+          {compensationMessage}
+        </p>
+      )}
+
+      {showCompensation && (
+        <div className="print:hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4">
+          <form onSubmit={handleCompensation} className="w-full max-w-md bg-white rounded-xl shadow-xl border border-slate-200 p-5">
+            <div className="flex items-start justify-between gap-4 mb-5">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Registrar compensação</h2>
+                <p className="text-sm text-slate-500 mt-1">Os horários serão preenchidos pela sua jornada cadastrada.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCompensation(false)}
+                aria-label="Fechar"
+                className="p-1.5 text-slate-500 hover:bg-slate-100 rounded-md"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <label htmlFor="compensation-date" className="block text-sm font-semibold text-slate-700 mb-1.5">
+              Data da compensação
+            </label>
+            <input
+              id="compensation-date"
+              type="date"
+              value={compensationDate}
+              onChange={(event) => setCompensationDate(event.target.value)}
+              required
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600"
+            />
+            {compensationError && <p role="alert" className="text-sm text-red-700 mt-3">{compensationError}</p>}
+            <div className="flex justify-end gap-2 mt-5">
+              <button
+                type="button"
+                onClick={() => setShowCompensation(false)}
+                className="px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={savingCompensation}
+                className="px-3 py-2 text-sm font-semibold text-white bg-emerald-700 hover:bg-emerald-800 disabled:opacity-60 rounded-lg"
+              >
+                {savingCompensation ? 'Registrando...' : 'Confirmar'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* The Printable Timesheet Mirror Card */}
       <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-3.5 sm:p-8 shadow-sm print:border-none print:shadow-none print:p-0">
@@ -142,7 +238,7 @@ export const VirtualMirrorPage: React.FC = () => {
           </div>
 
           {/* Card Resumo Banco de Horas & Vigência CLT (Art. 59 § 5º) */}
-          {(monthData?.balanceMinutes > 0 || monthData?.days?.some((d: any) => d.calculation?.balanceMinutes > 0)) && (() => {
+          {(monthData?.availableBankMinutes > 0 || monthData?.days?.some((d: any) => d.calculation?.balanceMinutes > 0)) && (() => {
             const overtimeDays = (monthData?.days || []).filter((d: any) => d.calculation?.balanceMinutes > 0);
             const firstExp = monthData?.earliestExpirationDate || (overtimeDays[0] ? calculateExpirationDate(overtimeDays[0].date, 6) : null);
             const lastExp = monthData?.latestExpirationDate || (overtimeDays[overtimeDays.length - 1] ? calculateExpirationDate(overtimeDays[overtimeDays.length - 1].date, 6) : null);
@@ -169,7 +265,7 @@ export const VirtualMirrorPage: React.FC = () => {
                       Banco de Horas — Vigência Legal de 6 Meses (Art. 59, § 5º da CLT)
                     </span>
                     <p className="text-[11px] text-slate-600 mt-0.5">
-                      Horas extras desta competência possuem prazo legal de <strong>6 meses contados a partir do dia em que foram geradas</strong> (data da marcação do ponto). Decorrido este prazo, deverão ser <strong>pagas com acréscimo legal mínimo de 50%</strong> (vencimento: <strong>{expText}</strong>).
+                      Cada crédito vence em até <strong>6 meses a partir da data em que foi gerado</strong>. A compensação utiliza primeiro as horas com vencimento mais próximo (vencimentos: <strong>{expText}</strong>).
                     </p>
                   </div>
                 </div>
@@ -177,7 +273,7 @@ export const VirtualMirrorPage: React.FC = () => {
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-[11px] font-medium text-slate-600">Saldo Positivo:</span>
                   <span className="font-mono font-bold text-emerald-700 bg-white px-2.5 py-1 rounded-lg border border-emerald-300">
-                    {minutesToTimeString(monthData?.balanceMinutes > 0 ? monthData.balanceMinutes : 0, true)}
+                    {minutesToTimeString(monthData?.availableBankMinutes || 0, true)}
                   </span>
                 </div>
               </div>
@@ -274,6 +370,8 @@ export const VirtualMirrorPage: React.FC = () => {
                     <td className="py-2 px-3 font-sans text-[11px] text-slate-600">
                       {d.isHoliday ? (
                         <span className="text-amber-700 font-semibold">Feriado: {d.holidayName}</span>
+                      ) : entries.some((entry: any) => entry.source === TimeEntrySource.COMPENSATED) ? (
+                        <span className="text-emerald-700 font-semibold">Compensado</span>
                       ) : d.calculation.isIncomplete ? (
                         <span className="text-red-600 font-semibold">Registro Incompleto</span>
                       ) : (

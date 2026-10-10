@@ -1,7 +1,23 @@
 import { calculateDayWork, timeStringToMinutes, minutesToTimeString, calculateExpirationDate } from '../time-calculator';
+import { calculateAvailableBankHours } from '../time-calculator';
 import { ITimeEntry, TimeEntryType, TimeEntrySource, TimeEntryStatus } from '../../types';
 
 describe('Time Calculator Domain Logic', () => {
+  it('deducts compensation from the credit closest to its expiration', () => {
+    const balance = calculateAvailableBankHours(
+      [
+        { workDate: '2026-01-10', minutes: 120 },
+        { workDate: '2026-02-10', minutes: 180 },
+      ],
+      [{ workDate: '2026-03-01', minutes: 150 }],
+      '2026-03-01',
+    );
+
+    expect(balance.minutes).toBe(150);
+    expect(balance.earliestExpirationDate).toBe('2026-08-10');
+    expect(balance.latestExpirationDate).toBe('2026-08-10');
+  });
+
   it('should calculate minutes from string and back', () => {
     expect(timeStringToMinutes('08:30')).toBe(510);
     expect(minutesToTimeString(510)).toBe('08:30');
