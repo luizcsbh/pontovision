@@ -41,8 +41,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ onImageCaptured })
       setIsCameraActive(true);
     } catch (err: any) {
       console.warn('Erro ao acessar getUserMedia:', err);
-      // Fallback para HTML5 Media Capture nativo via input capture="environment"
-      setCameraError('Acesso direto à câmera indisponível ou negado pelo navegador. Você pode usar a captura HTML5 nativa do dispositivo.');
+      setCameraError('Acesso direto à câmera indisponível ou negado pelo navegador. Você pode usar a captura nativa do dispositivo.');
       setIsCameraActive(false);
       // Aciona automaticamente o input HTML5 se o getUserMedia falhar
       if (fileInputRef.current) {
@@ -203,7 +202,7 @@ export const CameraCapture: React.FC<CameraCaptureProps> = ({ onImageCaptured })
                 <Camera className="w-7 h-7" />
               </div>
               <span className="font-bold text-slate-800 text-base">Fotografar</span>
-              <span className="text-xs text-slate-500 mt-1">Câmera do dispositivo (HTML5)</span>
+              <span className="text-xs text-slate-500 mt-1">Câmera do dispositivo</span>
             </button>
 
             {/* Opção 2: Upload ou Seleção de Arquivo / Galeria */}

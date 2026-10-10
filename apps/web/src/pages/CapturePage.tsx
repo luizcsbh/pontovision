@@ -81,7 +81,7 @@ export const CapturePage: React.FC = () => {
         <div>
           <h1 className="text-2xl font-black text-slate-800">Fotografar</h1>
           <p className="text-sm text-slate-500">
-            Acesso à câmera do dispositivo via HTML5 com OCR 100% local.
+            Acesso à câmera do dispositivo com OCR 100% local.
           </p>
         </div>
         <div className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-semibold flex items-center space-x-1.5">
