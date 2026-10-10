@@ -440,10 +440,10 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {/* Abas */}
-      <div className="flex space-x-2 border-b border-slate-200 bg-white p-2 rounded-2xl shadow-sm">
+      <div className="flex overflow-x-auto no-scrollbar gap-1.5 sm:gap-2 border-b border-slate-200 bg-white p-1.5 sm:p-2 rounded-2xl shadow-sm">
         <button
           onClick={() => setActiveTab('personal')}
-          className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+          className={`flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
             activeTab === 'personal'
               ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -455,26 +455,26 @@ export const ProfilePage: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('company')}
-          className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+          className={`flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
             activeTab === 'company'
               ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
           <Building2 className="w-4 h-4" />
-          <span>Local de Trabalho (Empresa)</span>
+          <span>Empresa & Local</span>
         </button>
 
         <button
           onClick={() => setActiveTab('schedules')}
-          className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+          className={`flex items-center space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex-shrink-0 ${
             activeTab === 'schedules'
               ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/20'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
           <Clock className="w-4 h-4" />
-          <span>Minhas Jornadas ({schedules.length})</span>
+          <span>Jornadas ({schedules.length})</span>
         </button>
       </div>
 
@@ -482,7 +482,7 @@ export const ProfilePage: React.FC = () => {
       {/* ABA 1: DADOS PESSOAIS */}
       {/* ───────────────────────────────────────────────────────────── */}
       {activeTab === 'personal' && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-8 shadow-sm space-y-6">
           <div className="border-b border-slate-100 pb-4">
             <h2 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
               <User className="w-5 h-5 text-blue-600" />
@@ -593,7 +593,7 @@ export const ProfilePage: React.FC = () => {
       {/* ABA 2: LOCAL DE TRABALHO / EMPRESA */}
       {/* ───────────────────────────────────────────────────────────── */}
       {activeTab === 'company' && (
-        <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm space-y-6">
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-8 shadow-sm space-y-6">
           <div className="border-b border-slate-100 pb-4">
             <h2 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
               <Building2 className="w-5 h-5 text-indigo-600" />
@@ -743,7 +743,7 @@ export const ProfilePage: React.FC = () => {
         <div className="space-y-6">
           {/* Card de Resumo Semanal da Escala Padrão */}
             {activeSchedule && (
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-md space-y-4">
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl sm:rounded-3xl p-4 sm:p-6 text-white shadow-md space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center space-x-2">
@@ -753,7 +753,7 @@ export const ProfilePage: React.FC = () => {
                       </span>
                       <span className="text-sm font-semibold opacity-90">{activeSchedule.name}</span>
                     </div>
-                    <p className="text-3xl font-black mt-2 font-mono">{fmtHours(activeWeekMins)}</p>
+                    <p className="text-2xl sm:text-3xl font-black mt-2 font-mono">{fmtHours(activeWeekMins)}</p>
                     <p className="text-xs opacity-80 mt-0.5">
                       {activeWorkDaysCount} dias de trabalho/semana ·{' '}
                       {fmtHours(Math.round(activeWeekMins / (activeWorkDaysCount || 1)))} média/dia ·{' '}
@@ -762,16 +762,16 @@ export const ProfilePage: React.FC = () => {
                   </div>
 
                   {/* Mini calendário visual por dia */}
-                  <div className="flex gap-1.5 flex-wrap">
+                  <div className="flex gap-1 sm:gap-1.5 flex-wrap">
                     {DAY_NAMES.map((d, idx) => {
                       const r = activeSchedule.weeklyRules?.find((rule) => rule.dayOfWeek === idx);
                       const isEnabled = r?.isEnabled;
                       const mins = isEnabled ? calcWorkMinutes(r) : 0;
                       return (
-                        <div key={idx} className="flex flex-col items-center gap-1">
-                          <span className="text-[10px] opacity-70 font-medium">{d.slice(0, 3)}</span>
+                        <div key={idx} className="flex flex-col items-center gap-0.5 sm:gap-1">
+                          <span className="text-[9px] sm:text-[10px] opacity-70 font-medium">{d.slice(0, 3)}</span>
                           <div
-                            className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${
+                            className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all ${
                               isEnabled ? 'bg-white text-blue-700 shadow-sm' : 'bg-white/10 text-white/40'
                             }`}
                             title={isEnabled ? `${fmtHours(mins)} de trabalho (${r?.plannedEntry} - ${r?.plannedExit})` : 'Folga'}
@@ -803,7 +803,7 @@ export const ProfilePage: React.FC = () => {
               </div>
             )}
 
-            <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+            <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-8 shadow-sm">
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-5">
                 <div>
                   <h2 className="text-lg font-bold text-slate-800 flex items-center space-x-2">
@@ -857,7 +857,7 @@ export const ProfilePage: React.FC = () => {
                   return (
                     <div
                       key={item._id}
-                      className={`p-6 rounded-2xl border transition-all ${
+                      className={`p-4 sm:p-6 rounded-2xl border transition-all ${
                         item.isDefault
                           ? 'border-blue-300 bg-blue-50/20 shadow-sm ring-1 ring-blue-500/10'
                           : 'border-slate-200 bg-white hover:border-slate-300'
@@ -923,7 +923,7 @@ export const ProfilePage: React.FC = () => {
                       </div>
 
                       {/* Mini resumo dos dias */}
-                      <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-7 gap-1.5 text-center">
+                      <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-7 gap-1 text-center">
                         {DAY_NAMES.map((d, idx) => {
                           const rule = item.weeklyRules?.find((r) => r.dayOfWeek === idx);
                           const isEnabled = rule?.isEnabled;

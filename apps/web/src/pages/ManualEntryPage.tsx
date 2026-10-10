@@ -62,13 +62,13 @@ export const ManualEntryPage: React.FC = () => {
         <span>Voltar</span>
       </button>
 
-      <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-        <div className="flex items-center space-x-3 mb-6">
-          <div className="p-3 bg-blue-100 text-blue-700 rounded-2xl">
-            <PlusCircle className="w-6 h-6" />
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-8 shadow-sm">
+        <div className="flex items-center space-x-3 mb-5 sm:mb-6">
+          <div className="p-2.5 sm:p-3 bg-blue-100 text-blue-700 rounded-2xl flex-shrink-0">
+            <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-slate-800">Nova Marcação Manual</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-slate-800">Nova Marcação Manual</h1>
             <p className="text-xs text-slate-500">Cadastre uma batida de ponto sem necessidade de fotografia.</p>
           </div>
         </div>
@@ -140,18 +140,18 @@ export const ManualEntryPage: React.FC = () => {
             />
           </div>
 
-          <div className="pt-4 flex items-center justify-end space-x-3">
+          <div className="pt-4 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              className="w-full sm:w-auto px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors text-center"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl shadow-md transition-colors flex items-center space-x-2"
+              className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl shadow-md transition-colors flex items-center justify-center space-x-2"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>{isSubmitting ? 'Salvando...' : 'Gravar Marcação'}</span>

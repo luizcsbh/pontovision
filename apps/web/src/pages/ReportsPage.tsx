@@ -49,15 +49,17 @@ export const ReportsPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Relatórios & Exportações</h1>
-          <p className="text-sm text-slate-500">Exporte espelhos de ponto e resumos consolidados em diversos formatos.</p>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800">Relatórios & Exportações</h1>
+          <p className="text-xs sm:text-sm text-slate-500">Exporte espelhos de ponto e resumos consolidados em diversos formatos.</p>
         </div>
 
-        <div className="flex items-center space-x-2 bg-white border border-slate-200 rounded-2xl p-2 shadow-sm">
-          <Clock className="w-4 h-4 text-slate-400 ml-2" />
-          <span className="text-xs font-semibold text-slate-600">Período:</span>
+        <div className="flex items-center justify-between sm:justify-start space-x-2 bg-white border border-slate-200 rounded-2xl p-2 sm:p-2.5 shadow-sm w-full sm:w-auto">
+          <div className="flex items-center space-x-2">
+            <Clock className="w-4 h-4 text-slate-400 ml-1" />
+            <span className="text-xs font-semibold text-slate-600">Período:</span>
+          </div>
           <input
             type="month"
             value={selectedMonth}
@@ -67,16 +69,16 @@ export const ReportsPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
         {/* PDF Exporter */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-blue-400 transition-colors">
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-rose-400 transition-colors">
           <div className="space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center">
-              <FileText className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-base">Espelho de Ponto em PDF</h3>
-              <p className="text-xs text-slate-500 mt-1">
+              <h3 className="font-bold text-slate-800 text-sm sm:text-base">Espelho de Ponto em PDF</h3>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                 Documento A4 diagramado profissionalmente com cabeçalho, tabela dia a dia, totais de jornada e rodapé legal.
               </p>
             </div>
@@ -92,14 +94,14 @@ export const ReportsPage: React.FC = () => {
         </div>
 
         {/* Excel XLSX Exporter */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-emerald-400 transition-colors">
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-emerald-400 transition-colors">
           <div className="space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-              <FileSpreadsheet className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <FileSpreadsheet className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-base">Planilha Excel (XLSX)</h3>
-              <p className="text-xs text-slate-500 mt-1">
+              <h3 className="font-bold text-slate-800 text-sm sm:text-base">Planilha Excel (XLSX)</h3>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                 Planilha com colunas estruturadas, batidas de ponto, horas trabalhadas, horas previstas e cálculos de saldo.
               </p>
             </div>
@@ -115,14 +117,14 @@ export const ReportsPage: React.FC = () => {
         </div>
 
         {/* CSV Exporter */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-blue-400 transition-colors">
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-blue-400 transition-colors">
           <div className="space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center">
-              <FileText className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-base">Arquivo CSV Delimitado</h3>
-              <p className="text-xs text-slate-500 mt-1">
+              <h3 className="font-bold text-slate-800 text-sm sm:text-base">Arquivo CSV Delimitado</h3>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                 Formato leve separado por ponto e vírgula, ideal para importar em softwares de contabilidade ou BI.
               </p>
             </div>
@@ -138,14 +140,14 @@ export const ReportsPage: React.FC = () => {
         </div>
 
         {/* JSON Exporter */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-indigo-400 transition-colors">
+        <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-indigo-400 transition-colors">
           <div className="space-y-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
-              <FileCode className="w-6 h-6" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+              <FileCode className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-base">Backup Estruturado (JSON)</h3>
-              <p className="text-xs text-slate-500 mt-1">
+              <h3 className="font-bold text-slate-800 text-sm sm:text-base">Backup Estruturado (JSON)</h3>
+              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                 Estrutura de dados completa para auditoria técnica, interoperabilidade ou backup pessoal dos registros.
               </p>
             </div>

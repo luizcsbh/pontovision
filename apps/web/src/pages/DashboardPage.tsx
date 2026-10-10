@@ -56,29 +56,29 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-blue-700 to-indigo-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-700 to-indigo-800 rounded-2xl sm:rounded-3xl p-4 sm:p-8 text-white shadow-lg relative overflow-hidden">
         <div className="relative z-10 max-w-2xl">
-          <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-semibold uppercase tracking-wider text-blue-200">
+          <span className="px-2.5 py-0.5 sm:px-3 sm:py-1 bg-white/10 backdrop-blur-md rounded-full text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-blue-200">
             Painel Geral
           </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold mt-3">
+          <h1 className="text-xl sm:text-3xl font-extrabold mt-2 sm:mt-3">
             Olá, {user?.name?.split(' ')[0]}! 👋
           </h1>
-          <p className="text-blue-100 text-sm mt-1">
+          <p className="text-blue-100 text-xs sm:text-sm mt-1 leading-relaxed">
             Aqui está a apuração das suas marcações no mês {currentMonth}. O processamento OCR funciona 100% no seu dispositivo.
           </p>
 
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Link
               to="/capture"
-              className="px-4 py-2.5 bg-white text-blue-800 font-bold text-sm rounded-xl hover:bg-blue-50 transition-colors shadow-sm flex items-center space-x-2"
+              className="px-4 py-2.5 bg-white text-blue-800 font-bold text-xs sm:text-sm rounded-xl hover:bg-blue-50 transition-colors shadow-sm flex items-center justify-center space-x-2"
             >
               <Camera className="w-4 h-4" />
               <span>Digitalizar Ponto (OCR)</span>
             </Link>
             <Link
               to="/entry/new"
-              className="px-4 py-2.5 bg-blue-600/80 hover:bg-blue-600 text-white font-medium text-sm rounded-xl transition-colors flex items-center space-x-2"
+              className="px-4 py-2.5 bg-blue-600/80 hover:bg-blue-600 text-white font-medium text-xs sm:text-sm rounded-xl transition-colors flex items-center justify-center space-x-2"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Marcação Manual</span>
@@ -87,56 +87,56 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-semibold uppercase">Horas Realizadas</span>
-            <Clock className="w-4 h-4 text-blue-600" />
+      {/* Metrics Grid (2x2 on mobile, 4 columns on large screens) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <div className="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between text-slate-500 mb-1 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Horas Realizadas</span>
+            <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 flex-shrink-0" />
           </div>
-          <div className="text-2xl font-black text-slate-800">
+          <div className="text-lg sm:text-2xl font-black text-slate-800 font-mono sm:font-sans">
             {minutesToTimeString(worked)}
           </div>
-          <p className="text-xs text-slate-400 mt-1">Neste mês</p>
+          <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 truncate">Neste mês</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-semibold uppercase">Horas Previstas</span>
-            <Calendar className="w-4 h-4 text-indigo-600" />
+        <div className="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between text-slate-500 mb-1 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Horas Previstas</span>
+            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-indigo-600 flex-shrink-0" />
           </div>
-          <div className="text-2xl font-black text-slate-800">
+          <div className="text-lg sm:text-2xl font-black text-slate-800 font-mono sm:font-sans">
             {minutesToTimeString(expected)}
           </div>
-          <p className="text-xs text-slate-400 mt-1">Jornada contratual CLT</p>
+          <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 truncate">Jornada contratual</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-semibold uppercase">Saldo Acumulado</span>
-            <TrendingUp className={`w-4 h-4 ${balance >= 0 ? 'text-emerald-600' : 'text-red-500'}`} />
+        <div className="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between text-slate-500 mb-1 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Saldo Acumulado</span>
+            <TrendingUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 ${balance >= 0 ? 'text-emerald-600' : 'text-red-500'}`} />
           </div>
-          <div className={`text-2xl font-black ${balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+          <div className={`text-lg sm:text-2xl font-black font-mono sm:font-sans ${balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
             {minutesToTimeString(balance, true)}
           </div>
-          <p className="text-xs text-slate-400 mt-1">{balance >= 0 ? 'Horas extras estimadas' : 'Diferença a compensar'}</p>
+          <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 truncate">{balance >= 0 ? 'Horas extras' : 'A compensar'}</p>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-semibold uppercase">Inconsistências</span>
-            <AlertTriangle className={`w-4 h-4 ${incomplete > 0 ? 'text-amber-500' : 'text-emerald-500'}`} />
+        <div className="bg-white p-3.5 sm:p-5 rounded-xl sm:rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+          <div className="flex items-center justify-between text-slate-500 mb-1 sm:mb-2">
+            <span className="text-[10px] sm:text-xs font-semibold uppercase truncate">Inconsistências</span>
+            <AlertTriangle className={`w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0 ${incomplete > 0 ? 'text-amber-500' : 'text-emerald-500'}`} />
           </div>
-          <div className={`text-2xl font-black ${incomplete > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+          <div className={`text-lg sm:text-2xl font-black ${incomplete > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
             {incomplete} {incomplete === 1 ? 'dia' : 'dias'}
           </div>
-          <p className="text-xs text-slate-400 mt-1">{incomplete > 0 ? 'Marcações ímpares pendentes' : 'Tudo regularizado'}</p>
+          <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 truncate">{incomplete > 0 ? 'Ímpares pendentes' : 'Regularizado'}</p>
         </div>
       </div>
 
       {/* Recent Entries & Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-4 sm:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-slate-800 text-base">Últimas Marcações</h2>
             <Link to="/virtual-mirror" className="text-xs font-semibold text-blue-600 hover:underline">

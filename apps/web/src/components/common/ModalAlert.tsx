@@ -173,7 +173,7 @@ export const ModalAlertProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200"
         >
           <div
-            className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden transform scale-100 transition-all p-6 space-y-5 animate-in zoom-in-95 duration-150"
+            className="bg-white rounded-2xl sm:rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden transform scale-100 transition-all p-5 sm:p-6 space-y-4 sm:space-y-5 animate-in zoom-in-95 duration-150"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between">
@@ -192,16 +192,16 @@ export const ModalAlertProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               </button>
             </div>
 
-            <div className="text-sm text-slate-600 leading-relaxed pl-1 whitespace-pre-line">
+            <div className="text-xs sm:text-sm text-slate-600 leading-relaxed pl-1 whitespace-pre-line">
               {modalState.message}
             </div>
 
-            <div className="pt-2 flex items-center justify-end space-x-2.5">
+            <div className="pt-2 flex flex-col-reverse sm:flex-row items-stretch sm:items-center sm:justify-end gap-2 sm:gap-2.5">
               {modalState.isConfirm && (
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors text-center"
                 >
                   {modalState.cancelText}
                 </button>
@@ -209,7 +209,7 @@ export const ModalAlertProvider: React.FC<{ children: React.ReactNode }> = ({ ch
               <button
                 type="button"
                 onClick={handleConfirm}
-                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${getConfirmButtonClasses()}`}
+                className={`w-full sm:w-auto px-5 py-2.5 rounded-xl text-sm font-semibold transition-all text-center ${getConfirmButtonClasses()}`}
                 autoFocus
               >
                 {modalState.confirmText}

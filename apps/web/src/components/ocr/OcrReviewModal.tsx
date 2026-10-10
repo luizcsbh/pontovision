@@ -170,21 +170,21 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 md:p-4">
       <div className="bg-white rounded-3xl max-w-5xl w-full overflow-hidden flex flex-col max-h-[95vh] shadow-2xl">
         {/* Header Modal */}
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
-              <Sparkles className="w-5 h-5" />
+        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-200 flex items-center justify-between">
+          <div className="flex items-center space-x-2.5 sm:space-x-3">
+            <div className="p-2 bg-blue-100 text-blue-700 rounded-xl flex-shrink-0">
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-lg">Revisão OCR · Registro de Ponto</h3>
-              <p className="text-xs text-slate-500">
+              <h3 className="font-bold text-slate-800 text-base sm:text-lg">Revisão OCR · Registro de Ponto</h3>
+              <p className="text-xs text-slate-500 hidden sm:block">
                 Campos da OCR editáveis. O comprovante completo é formado unindo o OCR com seus dados cadastrais.
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"
+            className="p-1.5 sm:p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -194,14 +194,14 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
         <div className="flex border-b border-slate-200 bg-slate-50">
           <button
             onClick={() => setStep('review')}
-            className={`flex items-center gap-2 px-6 py-3 text-sm font-semibold transition-colors border-b-2 ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold transition-colors border-b-2 ${
               step === 'review'
                 ? 'border-blue-600 text-blue-700 bg-white'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
             <Layers className="w-4 h-4" />
-            <span>1. Conferir Campos OCR</span>
+            <span>1. Conferir OCR</span>
           </button>
 
           <button
@@ -209,7 +209,7 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
               if (isOcrComplete) setStep('comprovante');
             }}
             disabled={!isOcrComplete}
-            className={`flex items-center gap-2 px-6 py-3 text-sm font-semibold transition-colors border-b-2 ${
+            className={`flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold transition-colors border-b-2 ${
               step === 'comprovante'
                 ? 'border-blue-600 text-blue-700 bg-white'
                 : isOcrComplete
@@ -223,7 +223,7 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
             }
           >
             <FileText className="w-4 h-4" />
-            <span>2. Ver Comprovante</span>
+            <span>2. Comprovante</span>
             {!isOcrComplete && (
               <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-full">
                 Bloqueado
@@ -237,7 +237,7 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
           {/* PASSO 1: REVISÃO DE CAMPOS DA OCR */}
           {/* ───────────────────────────────────────────────────────────── */}
           {step === 'review' && (
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-3.5 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {/* Lado Esquerdo: Imagem + Rodapé de Tamanho */}
               <div className="flex flex-col bg-slate-900 rounded-2xl p-4 overflow-hidden border border-slate-800">
                 <div className="text-xs text-slate-400 mb-2 font-medium flex items-center justify-between">
@@ -478,12 +478,12 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
                 </div>
 
                 {/* Botões de Ação */}
-                <div className="pt-4 border-t border-slate-200 flex items-center justify-between gap-3">
+                <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
                   <button
                     type="button"
                     disabled={!isOcrComplete}
                     onClick={() => setStep('comprovante')}
-                    className={`flex items-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-xl transition-all ${
+                    className={`flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold rounded-xl transition-all ${
                       isOcrComplete
                         ? 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 cursor-pointer'
                         : 'bg-slate-100 text-slate-400 cursor-not-allowed'
@@ -498,14 +498,14 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
                     <button
                       type="button"
                       onClick={onClose}
-                      className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                      className="flex-1 sm:flex-initial px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors text-center"
                     >
                       Descartar
                     </button>
                     <button
                       type="submit"
                       disabled={saving || !isOcrComplete}
-                      className="px-5 py-2.5 bg-blue-600 text-white font-semibold text-xs rounded-xl shadow-md hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50"
+                      className="flex-1 sm:flex-initial px-5 py-2.5 bg-blue-600 text-white font-semibold text-xs rounded-xl shadow-md hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
                     >
                       <CheckCircle2 className="w-4 h-4" />
                       <span>{saving ? 'Salvando...' : 'Confirmar & Salvar'}</span>
@@ -567,10 +567,10 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
 
         {/* Footer da Aba Comprovante */}
         {step === 'comprovante' && (
-          <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between bg-slate-50">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-0 bg-slate-50">
             <button
               onClick={() => setStep('review')}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              className="flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
               <span>Voltar aos Campos da OCR</span>
@@ -578,7 +578,7 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="px-6 py-2.5 bg-blue-600 text-white font-semibold text-xs rounded-xl shadow-md hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-60"
+              className="px-6 py-2.5 bg-blue-600 text-white font-semibold text-xs rounded-xl shadow-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
             >
               <CheckCircle2 className="w-4 h-4" />
               <span>Confirmar & Salvar no Espelho</span>

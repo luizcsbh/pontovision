@@ -37,7 +37,7 @@ export const Layout: React.FC = () => {
           onClose={() => setSidebarOpen(false)}
         />
         <main
-          className={`flex-1 w-full min-w-0 p-4 sm:p-6 lg:p-8 overflow-y-auto transition-all duration-300 ${
+          className={`flex-1 w-full min-w-0 p-3 sm:p-6 lg:p-8 overflow-y-auto transition-all duration-300 ${
             sidebarOpen ? 'md:ml-64' : 'ml-0'
           }`}
         >

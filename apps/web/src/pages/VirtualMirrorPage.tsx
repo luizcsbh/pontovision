@@ -69,21 +69,21 @@ export const VirtualMirrorPage: React.FC = () => {
       {/* Action Header (Hidden in Print) */}
       <div className="print:hidden flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Espelho de Ponto Virtual</h1>
-          <p className="text-sm text-slate-500">Documento estruturado idêntico ao modelo oficial de apuração CLT.</p>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800">Espelho de Ponto Virtual</h1>
+          <p className="text-xs sm:text-sm text-slate-500">Documento estruturado idêntico ao modelo oficial de apuração CLT.</p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <input
             type="month"
             value={currentYearMonth}
             onChange={(e) => setCurrentYearMonth(e.target.value)}
-            className="px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
           />
 
           <button
             onClick={handlePrint}
-            className="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl transition-colors shadow-sm flex items-center space-x-2"
+            className="px-3 sm:px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-xs sm:text-sm rounded-xl transition-colors shadow-sm flex items-center justify-center space-x-1.5 flex-1 sm:flex-initial"
           >
             <Printer className="w-4 h-4" />
             <span>Imprimir</span>
@@ -91,37 +91,37 @@ export const VirtualMirrorPage: React.FC = () => {
 
           <button
             onClick={handleDownloadPdf}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm flex items-center space-x-2"
+            className="px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs sm:text-sm rounded-xl transition-colors shadow-sm flex items-center justify-center space-x-1.5 flex-1 sm:flex-initial"
           >
             <Download className="w-4 h-4" />
-            <span>Baixar PDF</span>
+            <span>PDF</span>
           </button>
 
           <button
             onClick={handleDownloadExcel}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl transition-colors shadow-sm flex items-center space-x-2"
+            className="px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs sm:text-sm rounded-xl transition-colors shadow-sm flex items-center justify-center space-x-1.5 flex-1 sm:flex-initial"
           >
             <FileSpreadsheet className="w-4 h-4" />
-            <span>Excel (XLSX)</span>
+            <span>Excel</span>
           </button>
         </div>
       </div>
 
       {/* The Printable Timesheet Mirror Card */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm print:border-none print:shadow-none print:p-0">
+      <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-3.5 sm:p-8 shadow-sm print:border-none print:shadow-none print:p-0">
         {/* Document Header */}
         <div className="border-b-2 border-slate-800 pb-4 mb-6">
-          <div className="flex justify-between items-start">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
             <div>
-              <h2 className="text-xl font-black text-slate-900 tracking-wide uppercase">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-wide uppercase">
                 PONTOVISION AI — ESPELHO DE PONTO ELETRÔNICO
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
                 Relatório Pessoal de Marcações de Ponto (Conforme Portaria MTE 671)
               </p>
             </div>
-            <div className="text-right text-xs text-slate-600 font-mono">
-              <div>Mês de Competência: <strong className="text-slate-900">{currentYearMonth}</strong></div>
+            <div className="text-left sm:text-right text-xs text-slate-600 font-mono">
+              <div>Mês: <strong className="text-slate-900">{currentYearMonth}</strong></div>
               <div>Emissão: {new Date().toLocaleDateString('pt-BR')}</div>
             </div>
           </div>
@@ -186,7 +186,10 @@ export const VirtualMirrorPage: React.FC = () => {
         </div>
 
         {/* Timesheet Table */}
-        <div className="overflow-x-auto">
+        <div className="sm:hidden text-[11px] text-slate-400 mb-2 flex items-center gap-1">
+          <span>👉 Deslize horizontalmente para visualizar todas as colunas</span>
+        </div>
+        <div className="overflow-x-auto -mx-3.5 sm:mx-0 px-1 sm:px-0">
           <table className="w-full text-xs text-left border-collapse">
             <thead>
               <tr className="bg-slate-100 border-y border-slate-300 text-slate-700 font-bold uppercase tracking-wider">

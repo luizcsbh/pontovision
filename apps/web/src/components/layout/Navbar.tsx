@@ -42,7 +42,15 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
         </div>
 
         {user && (
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-4">
+            <Link
+              to="/profile"
+              title="Acessar Meu Perfil"
+              className="p-2 sm:hidden text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+              aria-label="Meu Perfil"
+            >
+              <UserIcon className="w-5 h-5" />
+            </Link>
             <Link
               to="/profile"
               title="Acessar Meu Perfil"
@@ -57,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
             <button
               onClick={logout}
               title="Sair"
-              className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
             >
               <LogOut className="w-5 h-5" />
             </button>

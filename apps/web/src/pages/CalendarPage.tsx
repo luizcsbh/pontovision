@@ -849,6 +849,7 @@ export const CalendarPage: React.FC = () => {
   const [editingEntry, setEditingEntry] = useState<any>(null);
   const [viewingReceiptEntry, setViewingReceiptEntry] = useState<any>(null);
   const [showAddPanel, setShowAddPanel] = useState(false);
+  const dayDetailRef = useRef<HTMLDivElement>(null);
 
   // Todas as marcações do dia selecionado (inclusive duplicadas)
   const dayEntries = useMemo(() => {
@@ -966,19 +967,30 @@ export const CalendarPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* ── Grade do mês ── */}
-        <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-200 p-5 shadow-sm">
+        <div className="lg:col-span-2 bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-2.5 sm:p-5 shadow-sm">
           {/* Cabeçalho dias da semana */}
-          <div className="grid grid-cols-7 gap-1.5 text-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-            {['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].map((d) => (
-              <span key={d}>{d}</span>
+          <div className="grid grid-cols-7 gap-1 sm:gap-1.5 text-center text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+            {[
+              { s: 'D', full: 'Dom' },
+              { s: 'S', full: 'Seg' },
+              { s: 'T', full: 'Ter' },
+              { s: 'Q', full: 'Qua' },
+              { s: 'Q', full: 'Qui' },
+              { s: 'S', full: 'Sex' },
+              { s: 'S', full: 'Sáb' },
+            ].map((d, idx) => (
+              <span key={idx}>
+                <span className="sm:hidden">{d.s}</span>
+                <span className="hidden sm:inline">{d.full}</span>
+              </span>
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-1.5">
+          <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
             {/* Espaços vazios iniciais */}
             {monthData?.days?.[0] &&
               Array.from({ length: monthData.days[0].dayOfWeek }).map((_, i) => (
-                <div key={`empty-${i}`} className="min-h-[80px] rounded-2xl bg-slate-50/60 border border-dashed border-slate-100" />
+                <div key={`empty-${i}`} className="min-h-[54px] sm:min-h-[80px] rounded-xl sm:rounded-2xl bg-slate-50/60 border border-dashed border-slate-100" />
               ))}
 
             {monthData?.days?.map((day: any) => {
@@ -992,8 +1004,16 @@ export const CalendarPage: React.FC = () => {
               return (
                 <div
                   key={day.date}
-                  onClick={() => { setSelectedDay(day); setShowAddPanel(false); }}
-                  className={`min-h-[80px] p-2 rounded-2xl border cursor-pointer transition-all flex flex-col justify-between select-none ${
+                  onClick={() => {
+                    setSelectedDay(day);
+                    setShowAddPanel(false);
+                    if (window.innerWidth < 1024 && dayDetailRef.current) {
+                      setTimeout(() => {
+                        dayDetailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                      }, 50);
+                    }
+                  }}
+                  className={`min-h-[54px] sm:min-h-[80px] p-1 sm:p-2 rounded-xl sm:rounded-2xl border cursor-pointer transition-all flex flex-col justify-between select-none ${
                     isSelected
                       ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-400/25 shadow-sm'
                       : isToday
@@ -1007,25 +1027,25 @@ export const CalendarPage: React.FC = () => {
                 >
                   {/* Número do dia + badges */}
                   <div className="flex items-start justify-between">
-                    <span className={`text-xs font-bold ${isToday ? 'text-blue-700' : 'text-slate-700'}`}>
+                    <span className={`text-[11px] sm:text-xs font-bold ${isToday ? 'text-blue-700 font-extrabold' : 'text-slate-700'}`}>
                       {parseInt(day.date.slice(8), 10)}
                     </span>
                     <div className="flex flex-col items-end gap-0.5">
                       {isToday && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" title="Hoje" />}
                       {day.isHoliday && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" title={`Feriado: ${day.holidayName}`} />}
-                      {incomplete && <span title="Incompleto"><AlertTriangle className="w-3 h-3 text-red-500" /></span>}
+                      {incomplete && <span title="Incompleto"><AlertTriangle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-500" /></span>}
                     </div>
                   </div>
 
                   {/* Horas / saldo */}
                   {hasPunches ? (
-                    <div>
-                      <div className="text-[11px] font-mono font-bold text-slate-800">
+                    <div className="overflow-hidden">
+                      <div className="text-[9px] sm:text-[11px] font-mono font-bold text-slate-800 truncate">
                         {minutesToTimeString(workedMin)}
                       </div>
                       <div
-                        className={`text-[10px] font-medium ${
-                          balanceMin > 0 ? 'text-emerald-600' : balanceMin < 0 ? 'text-red-500' : 'text-slate-400'
+                        className={`text-[8px] sm:text-[10px] font-medium truncate ${
+                          balanceMin > 0 ? 'text-emerald-600 font-semibold' : balanceMin < 0 ? 'text-red-500' : 'text-slate-400'
                         }`}
                         title={balanceMin > 0 ? `+${minutesToTimeString(balanceMin, false)} · Vencimento das horas em 6 meses: ${calculateExpirationDate(day.date, 6).split('-').reverse().join('/')}` : undefined}
                       >
@@ -1033,7 +1053,7 @@ export const CalendarPage: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <span className="text-[10px] text-slate-300">
+                    <span className="text-[8px] sm:text-[10px] text-slate-300 truncate">
                       {day.isHoliday ? 'Feriado' : '—'}
                     </span>
                   )}
@@ -1043,7 +1063,7 @@ export const CalendarPage: React.FC = () => {
           </div>
 
           {/* Legenda */}
-          <div className="flex flex-wrap gap-4 mt-4 pt-3 border-t border-slate-100 text-[11px] text-slate-500">
+          <div className="flex flex-wrap gap-2.5 sm:gap-4 mt-4 pt-3 border-t border-slate-100 text-[10px] sm:text-[11px] text-slate-500">
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block"/>Hoje</span>
             <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block"/>Feriado</span>
             <span className="flex items-center gap-1"><AlertTriangle className="w-3 h-3 text-red-500"/>Inconsistência</span>
@@ -1053,7 +1073,7 @@ export const CalendarPage: React.FC = () => {
         </div>
 
         {/* ── Painel do dia ── */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-sm flex flex-col gap-4">
+        <div ref={dayDetailRef} className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-5 shadow-sm flex flex-col gap-4">
           {selectedDay ? (
             <>
               {/* Cabeçalho dia */}
