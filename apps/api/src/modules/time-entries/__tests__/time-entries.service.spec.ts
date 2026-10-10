@@ -114,4 +114,35 @@ describe('TimeEntriesService', () => {
       ),
     ).rejects.toThrow('Já existe uma marcação de Saída registrada para o dia 2026-10-09');
   });
+
+  it('should store nsr in nsr field and keep notes separate', async () => {
+    mockEntryModel.findOne.mockResolvedValue(null);
+    mockEntryModel.create.mockResolvedValue({
+      _id: 'entry-nsr-1',
+      workDate: '2026-10-10',
+      time: '08:00',
+      type: TimeEntryType.ENTRY,
+      nsr: '000069071',
+      notes: undefined,
+      toObject: () => ({ _id: 'entry-nsr-1', nsr: '000069071' }),
+    });
+
+    await service.create(
+      {
+        workDate: '2026-10-10',
+        time: '08:00',
+        type: TimeEntryType.ENTRY,
+        source: TimeEntrySource.OCR_CONFIRMED,
+        nsr: '000069071',
+      },
+      '507f1f77bcf86cd799439011',
+    );
+
+    expect(mockEntryModel.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        nsr: '000069071',
+        notes: undefined,
+      }),
+    );
+  });
 });

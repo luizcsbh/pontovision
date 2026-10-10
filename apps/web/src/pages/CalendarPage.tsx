@@ -8,7 +8,7 @@ import { useModalAlert } from '../components/common/ModalAlert';
 import {
   ChevronLeft, ChevronRight, AlertTriangle, Clock, Plus, Trash2,
   FileText, Edit3, CheckCircle2, X, Camera, Upload, Keyboard,
-  Loader2, Image as ImageIcon, Sparkles, ExternalLink, CalendarClock,
+  Loader2, Image as ImageIcon, Sparkles, ExternalLink, CalendarClock, Hash,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────
@@ -58,6 +58,7 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose, onSaved
   const { showAlert } = useModalAlert();
   const [time, setTime]   = useState(entry.time?.slice(0,5) || '');
   const [type, setType]   = useState<TimeEntryType>(entry.type);
+  const [nsr, setNsr]     = useState(entry.nsr || '');
   const [notes, setNotes] = useState(entry.notes || '');
   const [saving, setSaving] = useState(false);
   const [err, setErr]     = useState('');
@@ -68,7 +69,12 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose, onSaved
     try {
       await apiRequest(`/entries/${entry._id}`, {
         method: 'PUT',
-        body: JSON.stringify({ time, type, notes: notes.trim() || undefined }),
+        body: JSON.stringify({
+          time,
+          type,
+          nsr: nsr.trim() || undefined,
+          notes: notes.trim() || undefined,
+        }),
       });
       onSaved();
       onClose();
@@ -135,6 +141,22 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose, onSaved
                 <option key={v} value={v}>{l}</option>
               ))}
             </select>
+          </div>
+
+          {/* NSR */}
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
+              <Hash className="w-3.5 h-3.5 text-indigo-600" /> NSR (Número Sequencial)
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={nsr}
+              onChange={(e) => setNsr(e.target.value.replace(/\D/g, ''))}
+              placeholder="Ex: 000069071"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-xl text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
           </div>
 
           {/* Observação */}
@@ -223,7 +245,7 @@ const ViewComprovanteModal: React.FC<ViewComprovanteModalProps> = ({ entry, onCl
   ].filter(Boolean).join(' - ');
 
   const rawNrep = fields.nrep || nrepFromNotes || '000140037502222046';
-  const rawNsr = fields.nsr || nsrFromNotes || '000000001';
+  const rawNsr = entry.nsr || fields.nsr || nsrFromNotes || '000000001';
 
   const comprovanteData: ComprovanteREPData = {
     data: fields.date || entry.workDate,
@@ -449,7 +471,7 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
       setOcrTime(fields.time || fields.hora || nowHHMM());
       setOcrNrep((fields.nrep || '').replace(/\D/g, ''));
       setOcrNsr((fields.nsr || '').replace(/\D/g, ''));
-      setOcrNotes(`Extraído via OCR · NSR: ${(fields.nsr || '').replace(/\D/g, '') || 'N/A'}`);
+      setOcrNotes('');
     } catch (err: any) {
       setOcrErr(err.message || 'Falha ao processar imagem.');
     } finally {
@@ -484,6 +506,7 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
           type: ocrType,
           source: TimeEntrySource.OCR_CONFIRMED,
           documentId: ocrDocId,
+          nsr: ocrNsr.trim() || undefined,
           notes: ocrNotes.trim() || undefined,
         }),
       });
@@ -780,7 +803,6 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
                   onChange={(e) => {
                     const clean = e.target.value.replace(/\D/g, '');
                     setOcrNsr(clean);
-                    setOcrNotes(`NSR: ${clean}`);
                   }}
                   placeholder="NSR (somente números)"
                   className="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-[11px] font-mono font-bold focus:ring-1 focus:ring-blue-500"
@@ -1221,6 +1243,14 @@ export const CalendarPage: React.FC = () => {
                             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${ENTRY_TYPE_BADGE[entry.type] || 'bg-slate-100 text-slate-600'}`}>
                               {ENTRY_TYPE_LABELS[entry.type] || entry.type}
                             </span>
+                            {entry.nsr && (
+                              <span
+                                className="text-[10px] font-mono text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded shrink-0"
+                                title={`NSR: ${entry.nsr}`}
+                              >
+                                NSR {entry.nsr}
+                              </span>
+                            )}
                             {isDuplicate && (
                               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-200/80 text-amber-900 flex items-center gap-0.5 shrink-0" title="Marcação duplicada neste horário">
                                 <AlertTriangle className="w-3 h-3 text-amber-700" />

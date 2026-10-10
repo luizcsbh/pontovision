@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../api/client';
 import { TimeEntryType, TimeEntrySource } from '@pontovision/shared';
 import { useModalAlert } from '../components/common/ModalAlert';
-import { PlusCircle, Clock, Calendar, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Clock, Calendar, CheckCircle2, ArrowLeft, Hash } from 'lucide-react';
 
 export const ManualEntryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -17,6 +17,7 @@ export const ManualEntryPage: React.FC = () => {
     return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   });
   const [type, setType] = useState<TimeEntryType>(TimeEntryType.ENTRY);
+  const [nsr, setNsr] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -34,6 +35,7 @@ export const ManualEntryPage: React.FC = () => {
           time,
           type,
           source: TimeEntrySource.MANUAL,
+          nsr: nsr.trim() || undefined,
           notes: notes.trim() || undefined,
         }),
       });
@@ -125,6 +127,22 @@ export const ManualEntryPage: React.FC = () => {
               <option value={TimeEntryType.EXIT}>Saída Final</option>
               <option value={TimeEntryType.OTHER}>Outra Marcação</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1 flex items-center space-x-1">
+              <Hash className="w-3.5 h-3.5 text-indigo-600" />
+              <span>NSR - Número Sequencial de Registro (Opcional)</span>
+            </label>
+            <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={nsr}
+              onChange={(e) => setNsr(e.target.value.replace(/\D/g, ''))}
+              placeholder="Ex: 000069071"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+            />
           </div>
 
           <div>

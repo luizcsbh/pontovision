@@ -28,6 +28,9 @@ export class TimeEntry {
   documentId?: Types.ObjectId;
 
   @Prop({ trim: true })
+  nsr?: string;
+
+  @Prop({ trim: true })
   notes?: string;
 
   @Prop({ type: Object, default: null })

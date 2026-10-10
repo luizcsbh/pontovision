@@ -29,6 +29,11 @@ export class CreateTimeEntryDto {
   @IsString()
   documentId?: string;
 
+  @ApiProperty({ required: false, example: '000069071', description: 'Número Sequencial de Registro (NSR)' })
+  @IsOptional()
+  @IsString()
+  nsr?: string;
+
   @ApiProperty({ required: false, example: 'Comprovante impresso legível' })
   @IsOptional()
   @IsString()
@@ -56,6 +61,11 @@ export class UpdateTimeEntryDto {
   @IsOptional()
   @IsEnum(TimeEntryType)
   type?: TimeEntryType;
+
+  @ApiProperty({ required: false, example: '000069071' })
+  @IsOptional()
+  @IsString()
+  nsr?: string;
 
   @ApiProperty({ required: false })
   @IsOptional()

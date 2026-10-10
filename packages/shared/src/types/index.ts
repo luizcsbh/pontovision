@@ -83,6 +83,7 @@ export interface ITimeEntry {
   source: TimeEntrySource;
   status: TimeEntryStatus;
   documentId?: string;
+  nsr?: string;
   notes?: string;
   originalOcrData?: Record<string, any>;
   createdBy: string;

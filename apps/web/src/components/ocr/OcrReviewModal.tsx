@@ -35,6 +35,7 @@ interface OcrReviewModalProps {
     type: TimeEntryType;
     source: TimeEntrySource;
     documentId: string;
+    nsr?: string;
     notes?: string;
   }) => void;
 }
@@ -72,7 +73,7 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
 
   // Dados de suporte para marcação
   const [type, setType] = useState<TimeEntryType>(TimeEntryType.ENTRY);
-  const [notes, setNotes] = useState<string>(`Extraído via OCR · NSR: ${(fields.nsr || '').replace(/\D/g, '') || 'N/A'}`);
+  const [notes, setNotes] = useState<string>('');
   const [saving, setSaving] = useState(false);
 
   // Verificação de preenchimento dos 4 campos obrigatórios da OCR
@@ -159,6 +160,7 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
       type,
       source: TimeEntrySource.OCR_CONFIRMED,
       documentId,
+      nsr: nsr.trim() || undefined,
       notes: notes.trim() || undefined,
     });
   };
@@ -405,7 +407,6 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
                           onChange={(e) => {
                             const clean = e.target.value.replace(/\D/g, '');
                             setNsr(clean);
-                            setNotes(`Extraído via OCR · NSR: ${clean}`);
                           }}
                           placeholder="Ex: 000069071"
                           className="w-full px-3 py-2 text-xs font-mono border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white font-bold"

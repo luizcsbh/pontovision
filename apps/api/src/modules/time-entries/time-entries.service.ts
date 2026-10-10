@@ -54,6 +54,7 @@ export class TimeEntriesService {
       source: dto.source || TimeEntrySource.MANUAL,
       status: TimeEntryStatus.ACTIVE,
       documentId: dto.documentId ? new Types.ObjectId(dto.documentId) : null,
+      nsr: dto.nsr ? dto.nsr.trim() : undefined,
       notes: dto.notes,
       originalOcrData: dto.originalOcrData,
       createdBy: new Types.ObjectId(userId),
@@ -128,6 +129,7 @@ export class TimeEntriesService {
     if (dto.workDate) entry.workDate = dto.workDate;
     if (dto.time) entry.time = dto.time;
     if (dto.type) entry.type = dto.type;
+    if (dto.nsr !== undefined) entry.nsr = dto.nsr ? dto.nsr.trim() : undefined;
     if (dto.notes !== undefined) entry.notes = dto.notes;
     entry.source = TimeEntrySource.CORRECTED;
 
