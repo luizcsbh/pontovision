@@ -164,4 +164,42 @@ describe('Time Calculator Domain Logic', () => {
     expect(res.balanceMinutes).toBe(120);
     expect(res.expirationDate).toBe('2027-04-09');
   });
+
+  it('should calculate 6 months expiration from workDate (the day overtime occurred), NOT from database createdAt', () => {
+    const entries: ITimeEntry[] = [
+      {
+        id: '1',
+        userId: 'u1',
+        workDate: '2026-10-02', // Dia que o ponto ocorreu (02/10)
+        time: '08:00',
+        type: TimeEntryType.ENTRY,
+        source: TimeEntrySource.MANUAL,
+        status: TimeEntryStatus.ACTIVE,
+        createdBy: 'u1',
+        createdAt: new Date('2026-10-10T12:00:00Z'), // Criado dias depois no sistema
+        updatedAt: new Date('2026-10-10T12:00:00Z'),
+      },
+      {
+        id: '2',
+        userId: 'u1',
+        workDate: '2026-10-02',
+        time: '19:00', // 11 horas trabalhadas = 660 min
+        type: TimeEntryType.EXIT,
+        source: TimeEntrySource.MANUAL,
+        status: TimeEntryStatus.ACTIVE,
+        createdBy: 'u1',
+        createdAt: new Date('2026-10-10T12:00:00Z'),
+        updatedAt: new Date('2026-10-10T12:00:00Z'),
+      },
+    ];
+    const rule = {
+      dayOfWeek: 5,
+      isEnabled: true,
+      expectedWorkMinutes: 480,
+    };
+    const res = calculateDayWork('2026-10-02', entries, rule);
+    expect(res.balanceMinutes).toBe(180);
+    // Vencimento de 6 meses contado a partir de 02/10/2026 -> 02/04/2027 (e não a partir da data de criação 10/10)
+    expect(res.expirationDate).toBe('2027-04-02');
+  });
 });

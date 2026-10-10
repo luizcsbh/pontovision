@@ -143,9 +143,20 @@ export const VirtualMirrorPage: React.FC = () => {
 
           {/* Card Resumo Banco de Horas & Vigência CLT (Art. 59 § 5º) */}
           {(monthData?.balanceMinutes > 0 || monthData?.days?.some((d: any) => d.calculation?.balanceMinutes > 0)) && (() => {
-            const expMonthDate = calculateExpirationDate(`${currentYearMonth}-01`, 6);
-            const [ey, em] = expMonthDate.split('-');
-            const compDateBR = `${em}/${ey}`;
+            const overtimeDays = (monthData?.days || []).filter((d: any) => d.calculation?.balanceMinutes > 0);
+            const firstExp = monthData?.earliestExpirationDate || (overtimeDays[0] ? calculateExpirationDate(overtimeDays[0].date, 6) : null);
+            const lastExp = monthData?.latestExpirationDate || (overtimeDays[overtimeDays.length - 1] ? calculateExpirationDate(overtimeDays[overtimeDays.length - 1].date, 6) : null);
+
+            const formatBR = (iso: string) => {
+              const [y, m, d] = iso.split('-');
+              return `${d}/${m}/${y}`;
+            };
+
+            const expText = firstExp && lastExp
+              ? firstExp === lastExp
+                ? formatBR(firstExp)
+                : `${formatBR(firstExp)} a ${formatBR(lastExp)}`
+              : 'Em até 6 meses';
 
             return (
               <div className="mt-3 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl text-xs text-emerald-950 flex flex-wrap items-center justify-between gap-3">
@@ -158,13 +169,13 @@ export const VirtualMirrorPage: React.FC = () => {
                       Banco de Horas — Vigência Legal de 6 Meses (Art. 59, § 5º da CLT)
                     </span>
                     <p className="text-[11px] text-slate-600 mt-0.5">
-                      Horas extras realizadas nesta competência ({currentYearMonth}) possuem prazo legal de <strong>6 meses</strong> para compensação em folgas. Decorrido este prazo, deverão ser <strong>pagas com acréscimo legal mínimo de 50%</strong> até <strong>{compDateBR}</strong>.
+                      Horas extras desta competência possuem prazo legal de <strong>6 meses contados a partir do dia em que foram geradas</strong> (data da marcação do ponto). Decorrido este prazo, deverão ser <strong>pagas com acréscimo legal mínimo de 50%</strong> (vencimento: <strong>{expText}</strong>).
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[11px] font-medium text-slate-600">Saldo Positivo a Compensar/Pagar:</span>
+                  <span className="text-[11px] font-medium text-slate-600">Saldo Positivo:</span>
                   <span className="font-mono font-bold text-emerald-700 bg-white px-2.5 py-1 rounded-lg border border-emerald-300">
                     {minutesToTimeString(monthData?.balanceMinutes > 0 ? monthData.balanceMinutes : 0, true)}
                   </span>
@@ -289,7 +300,19 @@ export const VirtualMirrorPage: React.FC = () => {
                   {minutesToTimeString(monthData?.balanceMinutes || 0, true)}
                 </td>
                 <td className="py-3 px-3 text-center font-sans text-[11px] text-emerald-800 font-semibold">
-                  {monthData?.balanceMinutes > 0 ? `Vcto: ${calculateExpirationDate(`${currentYearMonth}-01`, 6).split('-').reverse().join('/')}` : '-'}
+                  {(() => {
+                    const overtimeDays = (monthData?.days || []).filter((d: any) => d.calculation?.balanceMinutes > 0);
+                    if (overtimeDays.length === 0) return '-';
+                    const firstExp = monthData?.earliestExpirationDate || calculateExpirationDate(overtimeDays[0].date, 6);
+                    const lastExp = monthData?.latestExpirationDate || calculateExpirationDate(overtimeDays[overtimeDays.length - 1].date, 6);
+                    const formatBR = (iso: string) => {
+                      const [y, m, d] = iso.split('-');
+                      return `${d}/${m}/${y}`;
+                    };
+                    return firstExp === lastExp
+                      ? `Vcto: ${formatBR(firstExp)}`
+                      : `Vcto: ${formatBR(firstExp)} a ${formatBR(lastExp)}`;
+                  })()}
                 </td>
                 <td className="py-3 px-3 font-sans text-xs">
                   Incompletos: {monthData?.incompleteDaysCount || 0}

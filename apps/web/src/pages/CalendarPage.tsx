@@ -1115,7 +1115,7 @@ export const CalendarPage: React.FC = () => {
                     </div>
 
                     <p className="text-[11px] text-emerald-800 leading-snug">
-                      As <strong>{minutesToTimeString(selectedDay.calculation.balanceMinutes, false)}</strong> horas extras deste dia devem ser <strong>compensadas ou pagas com adicional</strong> até <strong>{formattedExp}</strong> (prazo legal de 6 meses).
+                      As <strong>{minutesToTimeString(selectedDay.calculation.balanceMinutes, false)}</strong> horas extras deste dia foram geradas em <strong>{selectedDay.date.split('-').reverse().join('/')}</strong> e têm prazo de validade de <strong>6 meses contados a partir desta data de realização</strong>. Devem ser compensadas ou pagas com adicional até <strong>{formattedExp}</strong> (Art. 59, § 5º da CLT).
                     </p>
 
                     <div className="pt-0.5">

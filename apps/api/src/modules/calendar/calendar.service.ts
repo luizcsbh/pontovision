@@ -19,6 +19,8 @@ export interface CalendarMonthSummary {
   totalExpectedMinutes: number;
   balanceMinutes: number;
   incompleteDaysCount: number;
+  earliestExpirationDate?: string;
+  latestExpirationDate?: string;
 }
 
 @Injectable()
@@ -99,6 +101,10 @@ export class CalendarService {
       });
     }
 
+    const overtimeDays = days.filter((d) => d.calculation.balanceMinutes > 0 && d.calculation.expirationDate);
+    const earliestExpirationDate = overtimeDays.length > 0 ? overtimeDays[0].calculation.expirationDate : undefined;
+    const latestExpirationDate = overtimeDays.length > 0 ? overtimeDays[overtimeDays.length - 1].calculation.expirationDate : undefined;
+
     return {
       month: yearMonth,
       days,
@@ -106,6 +112,8 @@ export class CalendarService {
       totalExpectedMinutes,
       balanceMinutes: totalWorkedMinutes - totalExpectedMinutes,
       incompleteDaysCount,
+      earliestExpirationDate,
+      latestExpirationDate,
     };
   }
 }

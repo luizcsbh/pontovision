@@ -93,13 +93,19 @@ export class ReportsService {
     });
 
     sheet.addRow([]);
+    const expSummary = data.earliestExpirationDate
+      ? data.earliestExpirationDate === data.latestExpirationDate
+        ? `Vcto: ${data.earliestExpirationDate}`
+        : `Vcto: ${data.earliestExpirationDate} a ${data.latestExpirationDate}`
+      : '-';
+
     const summaryRow = sheet.addRow([
       'TOTAIS DO MÊS',
       '',
       minutesToTimeString(data.totalWorkedMinutes),
       minutesToTimeString(data.totalExpectedMinutes),
       minutesToTimeString(data.balanceMinutes, true),
-      data.balanceMinutes > 0 ? `Vcto: ${calculateExpirationDate(`${month}-01`, 6)}` : '-',
+      expSummary,
       `Dias Incompletos: ${data.incompleteDaysCount}`,
     ]);
     summaryRow.font = { bold: true };
@@ -187,11 +193,13 @@ export class ReportsService {
       { x: 50, y, size: 10, font: timesBold, color: rgb(0.1, 0.2, 0.4) },
     );
 
-    if (data.balanceMinutes > 0) {
+    if (data.balanceMinutes > 0 && data.earliestExpirationDate) {
       y -= 14;
-      const expDate = calculateExpirationDate(`${month}-01`, 6);
+      const expRange = data.earliestExpirationDate === data.latestExpirationDate
+        ? data.earliestExpirationDate
+        : `${data.earliestExpirationDate} a ${data.latestExpirationDate}`;
       page.drawText(
-        `Banco de Horas (Art. 59 § 5º da CLT): Vencimento para compensação ou pagamento com adicional: ${expDate}`,
+        `Banco de Horas (Art. 59 § 5º da CLT): Vencimento em 6 meses (a partir de cada marcação): ${expRange}`,
         { x: 50, y, size: 8, font: timesRoman, color: rgb(0.1, 0.4, 0.2) },
       );
     }
