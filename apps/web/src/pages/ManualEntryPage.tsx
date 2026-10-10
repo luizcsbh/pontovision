@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../api/client';
 import { TimeEntryType, TimeEntrySource } from '@pontovision/shared';
+import { useModalAlert } from '../components/common/ModalAlert';
 import { PlusCircle, Clock, Calendar, CheckCircle2, ArrowLeft } from 'lucide-react';
 
 export const ManualEntryPage: React.FC = () => {
   const navigate = useNavigate();
+  const { showAlert } = useModalAlert();
   const [searchParams] = useSearchParams();
   const initialDate = searchParams.get('date') || new Date().toISOString().slice(0, 10);
 
@@ -38,7 +40,13 @@ export const ManualEntryPage: React.FC = () => {
 
       navigate('/calendar');
     } catch (err: any) {
-      setErrorMsg(err.message || 'Falha ao salvar marcação de ponto.');
+      const msg = err.message || 'Falha ao salvar marcação de ponto.';
+      setErrorMsg(msg);
+      showAlert({
+        title: 'Não Foi Possível Gravar',
+        message: msg,
+        type: 'warning',
+      });
     } finally {
       setIsSubmitting(false);
     }

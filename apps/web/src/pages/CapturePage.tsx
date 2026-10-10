@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { CameraCapture } from '../components/camera/CameraCapture';
 import { ImageEditorModal } from '../components/image-editor/ImageEditorModal';
 import { OcrReviewModal } from '../components/ocr/OcrReviewModal';
+import { useModalAlert } from '../components/common/ModalAlert';
 import { apiRequest } from '../api/client';
 import { Sparkles, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export const CapturePage: React.FC = () => {
   const navigate = useNavigate();
+  const { showAlert } = useModalAlert();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isProcessingOcr, setIsProcessingOcr] = useState(false);
@@ -63,7 +65,13 @@ export const CapturePage: React.FC = () => {
       setIsReviewOpen(false);
       navigate('/virtual-mirror');
     } catch (err: any) {
-      setErrorMsg(err.message || 'Falha ao salvar marcação.');
+      const msg = err.message || 'Falha ao salvar marcação.';
+      setErrorMsg(msg);
+      showAlert({
+        title: 'Não Foi Possível Gravar',
+        message: msg,
+        type: 'warning',
+      });
     }
   };
 

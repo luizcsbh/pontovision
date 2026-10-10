@@ -4,6 +4,7 @@ import { minutesToTimeString, TimeEntryType, TimeEntrySource, calculateExpiratio
 import { useAuth } from '../context/AuthContext';
 import { ComprovanteREP, ComprovanteREPData } from '../components/ocr/ComprovanteREP';
 import { AuthenticatedImage } from '../components/common/AuthenticatedImage';
+import { useModalAlert } from '../components/common/ModalAlert';
 import {
   ChevronLeft, ChevronRight, AlertTriangle, Clock, Plus, Trash2,
   FileText, Edit3, CheckCircle2, X, Camera, Upload, Keyboard,
@@ -54,6 +55,7 @@ interface EditEntryModalProps {
   onSaved: () => void;
 }
 const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose, onSaved }) => {
+  const { showAlert } = useModalAlert();
   const [time, setTime]   = useState(entry.time?.slice(0,5) || '');
   const [type, setType]   = useState<TimeEntryType>(entry.type);
   const [notes, setNotes] = useState(entry.notes || '');
@@ -71,7 +73,13 @@ const EditEntryModal: React.FC<EditEntryModalProps> = ({ entry, onClose, onSaved
       onSaved();
       onClose();
     } catch (error: any) {
-      setErr(error.message || 'Falha ao salvar.');
+      const msg = error.message || 'Falha ao salvar.';
+      setErr(msg);
+      showAlert({
+        title: 'Não Foi Possível Salvar',
+        message: msg,
+        type: 'warning',
+      });
     } finally { setSaving(false); }
   };
 
@@ -359,6 +367,7 @@ interface AddEntryPanelProps {
   onCancel: () => void;
 }
 const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }) => {
+  const { showAlert } = useModalAlert();
   const [mode, setMode] = useState<AddMode>('choose');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -403,8 +412,14 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
       });
       onSaved();
     } catch (error: any) {
-      setManErr(error.message || 'Erro ao salvar.');
+      const msg = error.message || 'Erro ao salvar.';
+      setManErr(msg);
       setManSaving(false);
+      showAlert({
+        title: 'Não Foi Possível Gravar',
+        message: msg,
+        type: 'warning',
+      });
     }
   };
 
@@ -452,7 +467,11 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
   const handleOcrConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ocrDate || !ocrTime || !ocrNrep || !ocrNsr) {
-      alert('Preencha os campos obrigatórios da OCR: Data, Hora, NREP e NSR.');
+      showAlert({
+        title: 'Campos Obrigatórios',
+        message: 'Preencha os campos obrigatórios da OCR: Data, Hora, NREP e NSR.',
+        type: 'warning',
+      });
       return;
     }
     setOcrConfirming(true);
@@ -470,8 +489,14 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
       });
       onSaved();
     } catch (err: any) {
-      setOcrErr(err.message || 'Erro ao confirmar.');
+      const msg = err.message || 'Erro ao confirmar.';
+      setOcrErr(msg);
       setOcrConfirming(false);
+      showAlert({
+        title: 'Não Foi Possível Gravar',
+        message: msg,
+        type: 'warning',
+      });
     }
   };
 
@@ -814,6 +839,7 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
 // Página principal
 // ─────────────────────────────────────────────
 export const CalendarPage: React.FC = () => {
+  const { showAlert, showConfirm } = useModalAlert();
   const [currentYearMonth, setCurrentYearMonth] = useState(() =>
     new Date().toISOString().slice(0, 7),
   );
@@ -877,11 +903,25 @@ export const CalendarPage: React.FC = () => {
   };
 
   const handleDeleteEntry = async (entryId: string) => {
-    if (!window.confirm('Remover esta marcação?')) return;
+    const confirmed = await showConfirm({
+      title: 'Excluir Marcação',
+      message: 'Tem certeza que deseja remover esta marcação de ponto? Esta ação não pode ser desfeita.',
+      type: 'danger',
+      confirmText: 'Sim, Excluir',
+      cancelText: 'Cancelar',
+    });
+    if (!confirmed) return;
     try {
       await apiRequest(`/entries/${entryId}`, { method: 'DELETE' });
       fetchMonth(currentYearMonth);
-    } catch (err) { console.error(err); }
+    } catch (err: any) {
+      console.error(err);
+      showAlert({
+        title: 'Erro ao Excluir',
+        message: err.message || 'Não foi possível remover a marcação.',
+        type: 'danger',
+      });
+    }
   };
 
   const handleSaved = () => {

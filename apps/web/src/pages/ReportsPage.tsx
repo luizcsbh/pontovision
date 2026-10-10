@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { apiRequest } from '../api/client';
+import { useModalAlert } from '../components/common/ModalAlert';
 import { FileText, FileSpreadsheet, Download, FileCode, CheckCircle, Clock } from 'lucide-react';
 
 export const ReportsPage: React.FC = () => {
+  const { showAlert } = useModalAlert();
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [downloadingFormat, setDownloadingFormat] = useState<string | null>(null);
 
@@ -25,7 +27,11 @@ export const ReportsPage: React.FC = () => {
       }
     } catch (err) {
       console.error(err);
-      alert('Falha ao exportar relatório.');
+      showAlert({
+        title: 'Falha na Exportação',
+        message: 'Não foi possível exportar o relatório para o formato selecionado. Tente novamente mais tarde.',
+        type: 'danger',
+      });
     } finally {
       setDownloadingFormat(null);
     }

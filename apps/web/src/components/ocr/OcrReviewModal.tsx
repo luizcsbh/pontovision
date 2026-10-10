@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { ComprovanteREP, ComprovanteREPData } from './ComprovanteREP';
 import { AuthenticatedImage } from '../common/AuthenticatedImage';
+import { useModalAlert } from '../common/ModalAlert';
 
 interface OcrReviewModalProps {
   documentId: string;
@@ -57,6 +58,7 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
   onConfirm,
 }) => {
   const { user } = useAuth();
+  const { showAlert } = useModalAlert();
   if (!isOpen || !ocrResult) return null;
 
   const fields = ocrResult.extractedFields || {};
@@ -143,7 +145,11 @@ export const OcrReviewModal: React.FC<OcrReviewModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isOcrComplete) {
-      alert('Preencha os campos obrigatórios da OCR (Data, Hora, NREP e NSR) antes de confirmar.');
+      showAlert({
+        title: 'Campos Obrigatórios',
+        message: 'Preencha os campos obrigatórios da OCR (Data, Hora, NREP e NSR) antes de confirmar.',
+        type: 'warning',
+      });
       return;
     }
     await handleSaveEdits();

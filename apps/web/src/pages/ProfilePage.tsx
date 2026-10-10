@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { apiRequest } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useModalAlert } from '../components/common/ModalAlert';
 import {
   User,
   Building2,
@@ -112,6 +113,7 @@ function defaultWeeklyRules(): DayRule[] {
 
 export const ProfilePage: React.FC = () => {
   const { user, refreshProfile } = useAuth();
+  const { showAlert, showConfirm } = useModalAlert();
   const [activeTab, setActiveTab] = useState<'personal' | 'company' | 'schedules'>('personal');
 
   // Estado dos Dados Pessoais
@@ -392,12 +394,23 @@ export const ProfilePage: React.FC = () => {
       setScheduleGlobalSuccess('Jornada padrão alterada com sucesso!');
       setTimeout(() => setScheduleGlobalSuccess(''), 3500);
     } catch (err: any) {
-      alert(err.message || 'Falha ao definir jornada padrão.');
+      showAlert({
+        title: 'Atenção',
+        message: err.message || 'Falha ao definir jornada padrão.',
+        type: 'warning',
+      });
     }
   };
 
   const handleDeleteSchedule = async (scheduleId: string, name: string) => {
-    if (!window.confirm(`Deseja realmente excluir a jornada "${name}"?`)) {
+    const confirmed = await showConfirm({
+      title: 'Excluir Jornada',
+      message: `Deseja realmente excluir a jornada "${name}"? Esta ação não pode ser desfeita.`,
+      type: 'danger',
+      confirmText: 'Sim, Excluir',
+      cancelText: 'Cancelar',
+    });
+    if (!confirmed) {
       return;
     }
     try {
@@ -406,7 +419,11 @@ export const ProfilePage: React.FC = () => {
       setScheduleGlobalSuccess('Jornada excluída com sucesso.');
       setTimeout(() => setScheduleGlobalSuccess(''), 3500);
     } catch (err: any) {
-      alert(err.message || 'Não foi possível excluir a jornada.');
+      showAlert({
+        title: 'Erro ao Excluir',
+        message: err.message || 'Não foi possível excluir a jornada.',
+        type: 'danger',
+      });
     }
   };
 
