@@ -4,7 +4,7 @@ import { AuthService } from '../auth/auth.service';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import * as ExcelJS from 'exceljs';
 import { stringify } from 'csv-stringify/sync';
-import { minutesToTimeString } from '@pontovision/shared';
+import { minutesToTimeString, calculateExpirationDate } from '@pontovision/shared';
 
 @Injectable()
 export class ReportsService {
@@ -27,19 +27,23 @@ export class ReportsService {
     const data = await this.calendarService.getMonthData(userId, month);
     const rows = data.days.map((d) => {
       const punches = d.calculation.entries.map((e) => e.time).join(' | ');
+      const expDate = d.calculation.balanceMinutes > 0
+        ? (d.calculation.expirationDate || calculateExpirationDate(d.date, 6))
+        : '-';
       return [
         d.date,
         punches || 'Sem batidas',
         minutesToTimeString(d.calculation.totalWorkedMinutes),
         minutesToTimeString(d.calculation.expectedWorkMinutes),
         minutesToTimeString(d.calculation.balanceMinutes, true),
+        expDate,
         d.isHoliday ? `Feriado: ${d.holidayName}` : d.calculation.isIncomplete ? 'Incompleto' : 'Regular',
       ];
     });
 
     return stringify(
       [
-        ['Data', 'Marcações', 'Horas Trabalhadas', 'Horas Previstas', 'Saldo', 'Observações'],
+        ['Data', 'Marcações', 'Horas Trabalhadas', 'Horas Previstas', 'Saldo', 'Vencimento (+6m)', 'Observações'],
         ...rows,
       ],
       { delimiter: ';' },
@@ -56,6 +60,7 @@ export class ReportsService {
     // Header info
     sheet.addRow(['PONTOVISION AI — ESPELHO DE PONTO VIRTUAL']);
     sheet.addRow([`Colaborador: ${user.name}`, `CPF: ${user.cpfMasked}`, `Mês: ${month}`]);
+    sheet.addRow(['Regra CLT Art. 59 § 5º: Horas extras têm validade de 6 meses para compensação ou pagamento com adicional.']);
     sheet.addRow([]);
 
     // Table Header
@@ -65,18 +70,24 @@ export class ReportsService {
       'Horas Realizadas',
       'Horas Previstas',
       'Saldo',
+      'Vencimento CLT (+6m)',
       'Status',
     ]);
     headerRow.font = { bold: true };
 
     data.days.forEach((d) => {
       const punches = d.calculation.entries.map((e) => e.time).join(' - ');
+      const expDate = d.calculation.balanceMinutes > 0
+        ? (d.calculation.expirationDate || calculateExpirationDate(d.date, 6))
+        : '-';
+
       sheet.addRow([
         d.date,
         punches || '-',
         minutesToTimeString(d.calculation.totalWorkedMinutes),
         minutesToTimeString(d.calculation.expectedWorkMinutes),
         minutesToTimeString(d.calculation.balanceMinutes, true),
+        expDate,
         d.isHoliday ? `Feriado (${d.holidayName})` : d.calculation.isIncomplete ? 'Incompleto' : 'Normal',
       ]);
     });
@@ -88,6 +99,7 @@ export class ReportsService {
       minutesToTimeString(data.totalWorkedMinutes),
       minutesToTimeString(data.totalExpectedMinutes),
       minutesToTimeString(data.balanceMinutes, true),
+      data.balanceMinutes > 0 ? `Vcto: ${calculateExpirationDate(`${month}-01`, 6)}` : '-',
       `Dias Incompletos: ${data.incompleteDaysCount}`,
     ]);
     summaryRow.font = { bold: true };
@@ -174,6 +186,15 @@ export class ReportsService {
       `Totais: Realizado: ${minutesToTimeString(data.totalWorkedMinutes)}  |  Previsto: ${minutesToTimeString(data.totalExpectedMinutes)}  |  Saldo: ${minutesToTimeString(data.balanceMinutes, true)}`,
       { x: 50, y, size: 10, font: timesBold, color: rgb(0.1, 0.2, 0.4) },
     );
+
+    if (data.balanceMinutes > 0) {
+      y -= 14;
+      const expDate = calculateExpirationDate(`${month}-01`, 6);
+      page.drawText(
+        `Banco de Horas (Art. 59 § 5º da CLT): Vencimento para compensação ou pagamento com adicional: ${expDate}`,
+        { x: 50, y, size: 8, font: timesRoman, color: rgb(0.1, 0.4, 0.2) },
+      );
+    }
 
     return pdfDoc.save();
   }

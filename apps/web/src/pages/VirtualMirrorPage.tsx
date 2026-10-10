@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { apiRequest } from '../api/client';
 import { useAuth } from '../context/AuthContext';
-import { minutesToTimeString, TimeEntryType } from '@pontovision/shared';
-import { Printer, Download, ChevronLeft, ChevronRight, FileSpreadsheet } from 'lucide-react';
+import { minutesToTimeString, TimeEntryType, calculateExpirationDate } from '@pontovision/shared';
+import { Printer, Download, ChevronLeft, ChevronRight, FileSpreadsheet, CalendarClock, AlertTriangle } from 'lucide-react';
 
 const WEEKDAYS = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
 
@@ -140,6 +140,38 @@ export const VirtualMirrorPage: React.FC = () => {
               <strong className="text-slate-800">44h Semanais (CLT)</strong>
             </div>
           </div>
+
+          {/* Card Resumo Banco de Horas & Vigência CLT (Art. 59 § 5º) */}
+          {(monthData?.balanceMinutes > 0 || monthData?.days?.some((d: any) => d.calculation?.balanceMinutes > 0)) && (() => {
+            const expMonthDate = calculateExpirationDate(`${currentYearMonth}-01`, 6);
+            const [ey, em] = expMonthDate.split('-');
+            const compDateBR = `${em}/${ey}`;
+
+            return (
+              <div className="mt-3 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl text-xs text-emerald-950 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-emerald-100 text-emerald-800 rounded-lg shrink-0">
+                    <CalendarClock className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="font-bold text-slate-800 block">
+                      Banco de Horas — Vigência Legal de 6 Meses (Art. 59, § 5º da CLT)
+                    </span>
+                    <p className="text-[11px] text-slate-600 mt-0.5">
+                      Horas extras realizadas nesta competência ({currentYearMonth}) possuem prazo legal de <strong>6 meses</strong> para compensação em folgas. Decorrido este prazo, deverão ser <strong>pagas com acréscimo legal mínimo de 50%</strong> até <strong>{compDateBR}</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[11px] font-medium text-slate-600">Saldo Positivo a Compensar/Pagar:</span>
+                  <span className="font-mono font-bold text-emerald-700 bg-white px-2.5 py-1 rounded-lg border border-emerald-300">
+                    {minutesToTimeString(monthData?.balanceMinutes > 0 ? monthData.balanceMinutes : 0, true)}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Timesheet Table */}
@@ -156,6 +188,7 @@ export const VirtualMirrorPage: React.FC = () => {
                 <th className="py-2.5 px-3 text-right">Trabalhado</th>
                 <th className="py-2.5 px-3 text-right">Previsto</th>
                 <th className="py-2.5 px-3 text-right">Saldo</th>
+                <th className="py-2.5 px-3 text-center">Vcto. CLT (+6m)</th>
                 <th className="py-2.5 px-3">Ocorrências / Origem</th>
               </tr>
             </thead>
@@ -200,6 +233,30 @@ export const VirtualMirrorPage: React.FC = () => {
                     >
                       {balanceMin !== 0 ? minutesToTimeString(balanceMin, true) : '-'}
                     </td>
+                    <td className="py-2 px-3 text-center">
+                      {balanceMin > 0 ? (() => {
+                        const expIso = d.calculation.expirationDate || calculateExpirationDate(d.date, 6);
+                        const [ey, em, ed] = expIso.split('-');
+                        const expFormatted = `${ed}/${em}/${ey}`;
+
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const expDateObj = new Date(parseInt(ey, 10), parseInt(em, 10) - 1, parseInt(ed, 10));
+                        const isExpired = expDateObj.getTime() < today.getTime();
+
+                        return isExpired ? (
+                          <span className="inline-block text-[10px] font-bold text-red-700 bg-red-100 px-1.5 py-0.5 rounded border border-red-300" title="Prazo de 6 meses expirado: Pagar com adicional!">
+                            {expFormatted} ⚠
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200" title="Limite legal para compensação ou pagamento">
+                            {expFormatted}
+                          </span>
+                        );
+                      })() : (
+                        <span className="text-slate-300">-</span>
+                      )}
+                    </td>
                     <td className="py-2 px-3 font-sans text-[11px] text-slate-600">
                       {d.isHoliday ? (
                         <span className="text-amber-700 font-semibold">Feriado: {d.holidayName}</span>
@@ -231,6 +288,9 @@ export const VirtualMirrorPage: React.FC = () => {
                 >
                   {minutesToTimeString(monthData?.balanceMinutes || 0, true)}
                 </td>
+                <td className="py-3 px-3 text-center font-sans text-[11px] text-emerald-800 font-semibold">
+                  {monthData?.balanceMinutes > 0 ? `Vcto: ${calculateExpirationDate(`${currentYearMonth}-01`, 6).split('-').reverse().join('/')}` : '-'}
+                </td>
                 <td className="py-3 px-3 font-sans text-xs">
                   Incompletos: {monthData?.incompleteDaysCount || 0}
                 </td>
@@ -239,8 +299,18 @@ export const VirtualMirrorPage: React.FC = () => {
           </table>
         </div>
 
+        {/* Nota Legal CLT Art. 59 § 5º */}
+        <div className="mt-6 p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-600 space-y-1">
+          <p className="font-bold text-slate-800">
+            Regulamentação CLT — Banco de Horas (Art. 59, § 5º):
+          </p>
+          <p>
+            O banco de horas acordado individualmente é válido por até 6 (seis) meses. As horas extras acumuladas não compensadas dentro deste prazo deverão ser pagas com o acréscimo legal de 50% sobre o valor da hora normal.
+          </p>
+        </div>
+
         {/* Disclaimer / Rodapé */}
-        <div className="mt-8 pt-4 border-t border-slate-200 text-[10px] text-slate-400 text-center">
+        <div className="mt-4 pt-3 border-t border-slate-200 text-[10px] text-slate-400 text-center">
           Documento gerado para controle e conciliação individual de marcações com OCR estritamente local (PontoVision AI).
         </div>
       </div>
