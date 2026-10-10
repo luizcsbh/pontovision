@@ -519,8 +519,8 @@ const AddEntryPanel: React.FC<AddEntryPanelProps> = ({ date, onSaved, onCancel }
             <Camera className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-slate-800">Tirar Foto</p>
-            <p className="text-xs text-slate-500">Abre a câmera do celular diretamente</p>
+            <p className="text-sm font-bold text-slate-800">Fotografar</p>
+            <p className="text-xs text-slate-500">Abre a câmera do dispositivo via HTML5</p>
           </div>
           <input
             ref={fileInputRef}

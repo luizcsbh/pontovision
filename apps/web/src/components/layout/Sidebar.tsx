@@ -20,7 +20,7 @@ interface SidebarProps {
 const navItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
   { name: 'Calendário de Ponto', path: '/calendar', icon: CalendarDays },
-  { name: 'Captura & OCR', path: '/capture', icon: Camera, highlight: true },
+  { name: 'Fotografar', path: '/capture', icon: Camera, highlight: true },
   { name: 'Marcação Manual', path: '/entry/new', icon: PlusCircle },
   { name: 'Espelho Virtual', path: '/virtual-mirror', icon: FileSpreadsheet },
   { name: 'Relatórios & Exportação', path: '/reports', icon: FileText },

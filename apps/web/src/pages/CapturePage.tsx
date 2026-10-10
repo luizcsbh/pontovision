@@ -79,9 +79,9 @@ export const CapturePage: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-slate-800">Digitalização com OCR Local</h1>
+          <h1 className="text-2xl font-black text-slate-800">Fotografar</h1>
           <p className="text-sm text-slate-500">
-            Reconhecimento ótico executado no seu servidor sem envio para serviços de terceiros.
+            Acesso à câmera do dispositivo via HTML5 com OCR 100% local.
           </p>
         </div>
         <div className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs font-semibold flex items-center space-x-1.5">
