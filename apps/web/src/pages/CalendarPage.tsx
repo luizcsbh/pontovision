@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { apiRequest } from '../api/client';
-import { minutesToTimeString, TimeEntryType, TimeEntrySource } from '@pontovision/shared';
+import { minutesToTimeString, TimeEntryType, TimeEntrySource, calculateExpirationDate } from '@pontovision/shared';
 import { useAuth } from '../context/AuthContext';
 import { ComprovanteREP, ComprovanteREPData } from '../components/ocr/ComprovanteREP';
 import { AuthenticatedImage } from '../components/common/AuthenticatedImage';
 import {
   ChevronLeft, ChevronRight, AlertTriangle, Clock, Plus, Trash2,
   FileText, Edit3, CheckCircle2, X, Camera, Upload, Keyboard,
-  Loader2, Image as ImageIcon, Sparkles, ExternalLink,
+  Loader2, Image as ImageIcon, Sparkles, ExternalLink, CalendarClock,
 } from 'lucide-react';
 
 // ─────────────────────────────────────────────
@@ -983,9 +983,12 @@ export const CalendarPage: React.FC = () => {
                       <div className="text-[11px] font-mono font-bold text-slate-800">
                         {minutesToTimeString(workedMin)}
                       </div>
-                      <div className={`text-[10px] font-medium ${
-                        balanceMin > 0 ? 'text-emerald-600' : balanceMin < 0 ? 'text-red-500' : 'text-slate-400'
-                      }`}>
+                      <div
+                        className={`text-[10px] font-medium ${
+                          balanceMin > 0 ? 'text-emerald-600' : balanceMin < 0 ? 'text-red-500' : 'text-slate-400'
+                        }`}
+                        title={balanceMin > 0 ? `+${minutesToTimeString(balanceMin, false)} · Vencimento das horas em 6 meses: ${calculateExpirationDate(day.date, 6).split('-').reverse().join('/')}` : undefined}
+                      >
                         {balanceMin !== 0 ? minutesToTimeString(balanceMin, true) : '—'}
                       </div>
                     </div>
@@ -1045,6 +1048,55 @@ export const CalendarPage: React.FC = () => {
                   </span>
                 </div>
               </div>
+
+              {/* Regra de Negócio: Vencimento das Horas Extras (+6 meses - CLT Art. 59 §5º) */}
+              {selectedDay.calculation.balanceMinutes > 0 && (() => {
+                const expirationDate = selectedDay.calculation.expirationDate || calculateExpirationDate(selectedDay.date, 6);
+                const [expY, expM, expD] = expirationDate.split('-');
+                const formattedExp = `${expD}/${expM}/${expY}`;
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const expDateObj = new Date(parseInt(expY, 10), parseInt(expM, 10) - 1, parseInt(expD, 10));
+                const diffTime = expDateObj.getTime() - today.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const isExpired = diffDays < 0;
+
+                return (
+                  <div className="p-3.5 bg-gradient-to-r from-emerald-50 to-teal-50/70 border border-emerald-200 rounded-2xl text-xs space-y-2 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-emerald-950 flex items-center gap-1.5">
+                        <CalendarClock className="w-4 h-4 text-emerald-600 shrink-0" />
+                        Vencimento / Prazo de Pagamento:
+                      </span>
+                      <span className="font-mono font-bold text-xs text-emerald-800 bg-white px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs">
+                        {formattedExp}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-emerald-800 leading-snug">
+                      As <strong>{minutesToTimeString(selectedDay.calculation.balanceMinutes, false)}</strong> horas extras deste dia devem ser <strong>compensadas ou pagas com adicional</strong> até <strong>{formattedExp}</strong> (prazo legal de 6 meses).
+                    </p>
+
+                    <div className="pt-0.5">
+                      {isExpired ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-red-700 bg-red-100 border border-red-300 px-2 py-0.5 rounded-md">
+                          <AlertTriangle className="w-3 h-3 text-red-600" />
+                          Prazo de 6 meses expirado: Efetuar pagamento com adicional!
+                        </span>
+                      ) : diffDays <= 30 ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-md">
+                          ⏳ Restam {diffDays} dias para compensar ou pagar
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                          ✓ Restam {diffDays} dias para compensação
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Alertas */}
               {selectedDay.calculation.warnings?.length > 0 && (

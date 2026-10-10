@@ -10,6 +10,31 @@ export interface DayCalculationResult {
   balanceMinutes: number; // positive = overtime, negative = missing
   isIncomplete: boolean;
   warnings: string[];
+  expirationDate?: string; // Data de vencimento das horas extras para compensação/pagamento (+6 meses, Art. 59 §5º CLT)
+}
+
+/**
+ * Adiciona meses a uma data YYYY-MM-DD mantendo o dia correspondente ou o último dia do mês destino.
+ * Regra CLT Banco de Horas (Art. 59 § 5º da CLT): compensação ou pagamento em até 6 meses.
+ */
+export function calculateExpirationDate(dateStr: string, months = 6): string {
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  const year = parseInt(parts[0], 10);
+  const month = parseInt(parts[1], 10) - 1;
+  const day = parseInt(parts[2], 10);
+
+  const totalMonths = month + months;
+  const targetYear = year + Math.floor(totalMonths / 12);
+  const targetMonth = ((totalMonths % 12) + 12) % 12;
+
+  const daysInTargetMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+  const targetDay = Math.min(day, daysInTargetMonth);
+
+  const y = targetYear;
+  const m = String(targetMonth + 1).padStart(2, '0');
+  const d = String(targetDay).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
 /**
@@ -110,6 +135,8 @@ export function calculateDayWork(
     balanceMinutes = 0;
   }
 
+  const expirationDate = balanceMinutes > 0 ? calculateExpirationDate(workDate, 6) : undefined;
+
   return {
     workDate,
     entries: uniqueEntries,
@@ -120,5 +147,6 @@ export function calculateDayWork(
     balanceMinutes,
     isIncomplete,
     warnings,
+    expirationDate,
   };
 }
