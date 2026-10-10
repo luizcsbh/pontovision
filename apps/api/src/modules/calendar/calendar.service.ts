@@ -12,6 +12,8 @@ export interface CalendarMonthSummary {
     isHoliday: boolean;
     holidayName?: string;
     calculation: DayCalculationResult;
+    rawEntries?: any[];
+    allEntries?: any[];
   }[];
   totalWorkedMinutes: number;
   totalExpectedMinutes: number;
@@ -92,6 +94,8 @@ export class CalendarService {
         isHoliday,
         holidayName,
         calculation: calc,
+        rawEntries: dayEntries,
+        allEntries: dayEntries,
       });
     }
 

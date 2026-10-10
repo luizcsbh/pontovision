@@ -3,6 +3,7 @@ import { TimeEntryType, ITimeEntry, IDayScheduleRule } from '../types';
 export interface DayCalculationResult {
   workDate: string;
   entries: ITimeEntry[];
+  rawEntries?: ITimeEntry[];
   totalWorkedMinutes: number;
   totalBreakMinutes: number;
   expectedWorkMinutes: number;
@@ -112,6 +113,7 @@ export function calculateDayWork(
   return {
     workDate,
     entries: uniqueEntries,
+    rawEntries: sortedEntries,
     totalWorkedMinutes,
     totalBreakMinutes,
     expectedWorkMinutes,

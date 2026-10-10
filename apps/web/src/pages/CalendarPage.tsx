@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { apiRequest } from '../api/client';
 import { minutesToTimeString, TimeEntryType, TimeEntrySource } from '@pontovision/shared';
 import { useAuth } from '../context/AuthContext';
@@ -824,6 +824,27 @@ export const CalendarPage: React.FC = () => {
   const [viewingReceiptEntry, setViewingReceiptEntry] = useState<any>(null);
   const [showAddPanel, setShowAddPanel] = useState(false);
 
+  // Todas as marcações do dia selecionado (inclusive duplicadas)
+  const dayEntries = useMemo(() => {
+    if (!selectedDay) return [];
+    const list: any[] = selectedDay.allEntries || selectedDay.rawEntries || selectedDay.calculation?.rawEntries || selectedDay.calculation?.entries || [];
+    return [...list].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+  }, [selectedDay]);
+
+  // Contagem para identificação de duplicatas no mesmo horário
+  const timeCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const e of dayEntries) {
+      const t = (e.time || '').slice(0, 5);
+      counts[t] = (counts[t] || 0) + 1;
+    }
+    return counts;
+  }, [dayEntries]);
+
+  const hasDuplicates = useMemo(() => {
+    return Object.values(timeCounts).some((count) => count > 1);
+  }, [timeCounts]);
+
   const fetchMonth = useCallback(async (ym: string) => {
     try {
       setLoading(true);
@@ -923,7 +944,7 @@ export const CalendarPage: React.FC = () => {
             {monthData?.days?.map((day: any) => {
               const isSelected   = selectedDay?.date === day.date;
               const isToday      = day.date === todayISO();
-              const hasPunches   = day.calculation.entries.length > 0;
+              const hasPunches   = (day.allEntries?.length || day.rawEntries?.length || day.calculation.entries.length) > 0;
               const workedMin    = day.calculation.totalWorkedMinutes;
               const balanceMin   = day.calculation.balanceMinutes;
               const incomplete   = day.calculation.isIncomplete;
@@ -1039,63 +1060,101 @@ export const CalendarPage: React.FC = () => {
 
               {/* Lista de marcações */}
               <div>
-                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
-                  Marcações Registradas
-                </h4>
-                {selectedDay.calculation.entries.length === 0 ? (
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                    Marcações Registradas ({dayEntries.length})
+                  </h4>
+                  {hasDuplicates && (
+                    <span className="text-[10px] font-bold text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3 text-amber-600" />
+                      Duplicadas detectadas
+                    </span>
+                  )}
+                </div>
+
+                {hasDuplicates && (
+                  <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-start gap-2 mb-2.5">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="text-[11px] leading-relaxed">
+                      <strong className="block text-amber-900 font-bold mb-0.5">Marcações repetidas encontradas</strong>
+                      Existem batidas registradas no mesmo horário. O cálculo CLT desconsidera a repetição, mas você pode clicar na lixeira vermelha para excluir a duplicada indesejada.
+                    </div>
+                  </div>
+                )}
+
+                {dayEntries.length === 0 ? (
                   <p className="text-xs text-slate-400 py-3 text-center bg-slate-50 rounded-xl">
                     Nenhuma marcação neste dia.
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {selectedDay.calculation.entries.map((entry: any) => (
-                      <div
-                        key={entry._id}
-                        className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                      >
-                        {/* Hora + tipo */}
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="font-mono font-bold text-slate-800 text-sm bg-white border border-slate-200 px-2 py-0.5 rounded-lg shrink-0">
-                            {entry.time?.slice(0,5)}
-                          </span>
-                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${ENTRY_TYPE_BADGE[entry.type] || 'bg-slate-100 text-slate-600'}`}>
-                            {ENTRY_TYPE_LABELS[entry.type] || entry.type}
-                          </span>
-                        </div>
+                    {dayEntries.map((entry: any) => {
+                      const timeStr = entry.time?.slice(0, 5);
+                      const isDuplicate = (timeCounts[timeStr] || 0) > 1;
 
-                        {/* Ações */}
-                        <div className="flex items-center gap-1 shrink-0">
-                          {/* Visualizar comprovante REP */}
-                          <button
-                            onClick={() => setViewingReceiptEntry(entry)}
-                            title="Visualizar Comprovante REP"
-                            className={`p-1.5 rounded-lg transition-colors flex items-center gap-1 ${
-                              entry.documentId
-                                ? 'text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200'
-                                : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'
-                            }`}
-                          >
-                            <FileText className="w-3.5 h-3.5" />
-                          </button>
-                          {/* Editar */}
-                          <button
-                            onClick={() => setEditingEntry(entry)}
-                            title="Editar marcação"
-                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          {/* Excluir */}
-                          <button
-                            onClick={() => handleDeleteEntry(entry._id)}
-                            title="Remover"
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                      return (
+                        <div
+                          key={entry._id}
+                          className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
+                            isDuplicate
+                              ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-200 shadow-xs'
+                              : 'bg-slate-50 border-slate-200'
+                          }`}
+                        >
+                          {/* Hora + tipo + badge de duplicada */}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="font-mono font-bold text-slate-800 text-sm bg-white border border-slate-200 px-2 py-0.5 rounded-lg shrink-0">
+                              {timeStr}
+                            </span>
+                            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${ENTRY_TYPE_BADGE[entry.type] || 'bg-slate-100 text-slate-600'}`}>
+                              {ENTRY_TYPE_LABELS[entry.type] || entry.type}
+                            </span>
+                            {isDuplicate && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-200/80 text-amber-900 flex items-center gap-0.5 shrink-0" title="Marcação duplicada neste horário">
+                                <AlertTriangle className="w-3 h-3 text-amber-700" />
+                                Duplicada
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Ações */}
+                          <div className="flex items-center gap-1 shrink-0">
+                            {/* Visualizar comprovante REP */}
+                            <button
+                              onClick={() => setViewingReceiptEntry(entry)}
+                              title="Visualizar Comprovante REP"
+                              className={`p-1.5 rounded-lg transition-colors flex items-center gap-1 ${
+                                entry.documentId
+                                  ? 'text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200'
+                                  : 'text-slate-400 hover:text-blue-600 hover:bg-blue-50'
+                              }`}
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                            </button>
+                            {/* Editar */}
+                            <button
+                              onClick={() => setEditingEntry(entry)}
+                              title="Editar marcação"
+                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            {/* Excluir */}
+                            <button
+                              onClick={() => handleDeleteEntry(entry._id)}
+                              title={isDuplicate ? "Excluir esta marcação duplicada" : "Remover"}
+                              className={`p-1.5 rounded-lg transition-colors ${
+                                isDuplicate
+                                  ? 'text-red-700 bg-red-100/90 hover:bg-red-200 border border-red-300 font-bold'
+                                  : 'text-slate-400 hover:text-red-600 hover:bg-red-50'
+                              }`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
